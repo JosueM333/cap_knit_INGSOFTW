@@ -151,7 +151,7 @@
                         <div class="d-flex gap-3 align-items-center">
                             @auth
                                 <button type="submit" class="btn btn-dark btn-lg px-5 fw-bold w-100 shadow border-2">
-                                    <i class="bi bi-cart-plus me-2"></i> Añadir a la Cesta
+                                    <i class="bi bi-cart-plus me-2"></i> Agregar al carrito 
                                 </button>
                             @else
                                 <a href="{{ route('login') }}" class="btn btn-outline-dark btn-lg px-5 fw-bold w-100 border-2">

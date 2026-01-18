@@ -17,7 +17,7 @@ class Cliente extends Authenticatable
 
     protected $table = 'CLIENTE';
     protected $primaryKey = 'CLI_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     const CREATED_AT = 'CLI_CREATED_AT';
     const UPDATED_AT = 'CLI_UPDATED_AT';

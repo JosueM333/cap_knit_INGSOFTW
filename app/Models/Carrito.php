@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class Carrito extends Model
 {
@@ -24,20 +24,29 @@ class Carrito extends Model
         'CRD_TOTAL'
     ];
 
-    /* ================= RELACIONES ================= */
+    /* =========================
+       RELACIONES
+       ========================= */
 
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'CLI_ID', 'CLI_ID');
     }
 
-    /* ================= VALIDACIÓN ================= */
+    public function detalles()
+    {
+        // Asegúrate que tu modelo CarritoDetalle tenga las claves correctas
+        return $this->hasMany(CarritoDetalle::class, 'CRD_ID', 'CRD_ID');
+    }
 
-    public static function validar(array $datos)
+    /* =========================
+       VALIDACIONES
+       ========================= */
+
+    public static function validarCreacion(array $datos)
     {
         $validator = Validator::make($datos, [
-            'CLI_ID'     => 'required|exists:CLIENTE,CLI_ID',
-            'CRD_ESTADO' => 'required|string|max:20',
+            'CLI_ID' => 'required|exists:CLIENTE,CLI_ID',
         ]);
 
         if ($validator->fails()) {
@@ -45,43 +54,87 @@ class Carrito extends Model
         }
     }
 
-    /* ================= LÓGICA ================= */
+    /* =========================
+       CASO F7.1 – Crear carrito
+       ========================= */
 
-    public static function crearCarrito(array $datos)
+    public static function crearCarrito(array $data)
     {
-        $datos['CRD_FECHA_CREACION'] = now();
-        $datos['CRD_SUBTOTAL'] = 0;
-        $datos['CRD_IMPUESTO'] = 0;
-        $datos['CRD_TOTAL'] = 0;
-
-        return self::create($datos);
+        return self::create([
+            'CLI_ID' => $data['CLI_ID'],
+            'CRD_ESTADO' => 'ACTIVO',
+            'CRD_SUBTOTAL' => 0,
+            'CRD_IMPUESTO' => 0,
+            'CRD_TOTAL' => 0,
+        ]);
     }
+
+
+    /* =========================
+       CASO F7.2 – Consultar Carritos (SOLUCIÓN AL "BUG")
+       ========================= */
 
     public static function obtenerCarritosActivos()
     {
-        return self::where('CRD_ESTADO', 'ACTIVO')
+        // CAMBIO IMPORTANTE:
+        // Usamos whereIn para traer los 'ACTIVO' Y los 'GUARDADO'.
+        // Así, cuando guardas el carrito, no desaparece de tu vista.
+        return self::whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
             ->with('cliente')
+            ->orderBy('CRD_ID', 'DESC') // Ordenamos por el más reciente primero
             ->get();
     }
 
-    public static function buscarPorCliente($criterio)
+    /* =========================
+       CASO F7.3 – Buscar carrito por cliente
+       ========================= */
+
+    public static function buscarPorCliente(string $criterio)
     {
         return self::whereHas('cliente', function ($q) use ($criterio) {
-            $q->where('CLI_CEDULA', 'LIKE', "%$criterio%")
-              ->orWhere('CLI_EMAIL', 'LIKE', "%$criterio%");
+            $q->where('CLI_CEDULA', 'LIKE', "%{$criterio}%")
+              ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
         })
-        ->where('CRD_ESTADO', 'ACTIVO')
-        ->with('cliente')
+        ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO']) // También permitimos ver los guardados aquí
+        ->with(['cliente', 'detalles.producto'])
         ->get();
     }
 
+    /* =========================
+       CASO F7.4 – Recalcular totales
+       ========================= */
+
+    public function recalcularTotales()
+    {
+        // CAMBIO IMPORTANTE:
+        // Cambié 'CDT_' por 'DCA_' para coincidir con tu controlador y modelo Detalle.
+        $subtotal = $this->detalles->sum(function ($item) {
+            return $item->DCA_CANTIDAD * $item->DCA_PRECIO_UNITARIO;
+        });
+
+        $impuesto = $subtotal * 0.12; // Ejemplo IVA 12%
+        $total    = $subtotal + $impuesto;
+
+        $this->update([
+            'CRD_SUBTOTAL' => $subtotal,
+            'CRD_IMPUESTO' => $impuesto,
+            'CRD_TOTAL'    => $total
+        ]);
+    }
+
+    /* =========================
+       CASO F7.5 – Vaciar carrito
+       ========================= */
+
     public function vaciar()
     {
-        $this->CRD_ESTADO = 'VACIADO';
-        $this->CRD_SUBTOTAL = 0;
-        $this->CRD_IMPUESTO = 0;
-        $this->CRD_TOTAL = 0;
-        $this->save();
+        $this->detalles()->delete();
+
+        $this->update([
+            'CRD_ESTADO'    => 'VACIADO', // O puedes dejarlo ACTIVO pero en 0
+            'CRD_SUBTOTAL' => 0,
+            'CRD_IMPUESTO' => 0,
+            'CRD_TOTAL'    => 0
+        ]);
     }
 }
-

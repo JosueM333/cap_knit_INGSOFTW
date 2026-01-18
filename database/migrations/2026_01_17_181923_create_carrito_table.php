@@ -11,11 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('carrito', function (Blueprint $table) {
-            $table->id();
+        Schema::create('CARRITO', function (Blueprint $table) {
+            $table->id('CRD_ID'); // PK
+            $table->foreignId('CLI_ID')->constrained('CLIENTE', 'CLI_ID')->onDelete('cascade');
+            $table->string('CRD_ESTADO')->default('ACTIVO');
+            $table->decimal('CRD_SUBTOTAL', 10, 2)->default(0);
+            $table->decimal('CRD_IMPUESTO', 10, 2)->default(0);
+            $table->decimal('CRD_TOTAL', 10, 2)->default(0);
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.
