@@ -61,11 +61,7 @@
                     </div>
 
                     
-                    @if ($errors->any())
-                        <div class="alert alert-danger mt-3">
-                            <strong>Datos incorrectos o incompletos.</strong>
-                        </div>
-                    @endif
+                  
 
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <a href="{{ route('clientes.index') }}" class="btn btn-light border">Cancelar</a>
