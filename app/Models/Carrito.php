@@ -35,7 +35,6 @@ class Carrito extends Model
 
     public function detalles()
     {
-        // Asegúrate que tu modelo CarritoDetalle tenga las claves correctas
         return $this->hasMany(CarritoDetalle::class, 'CRD_ID', 'CRD_ID');
     }
 
@@ -69,19 +68,15 @@ class Carrito extends Model
         ]);
     }
 
-
     /* =========================
-       CASO F7.2 – Consultar Carritos (SOLUCIÓN AL "BUG")
+       CASO F7.2 – Consultar Carritos
        ========================= */
 
     public static function obtenerCarritosActivos()
     {
-        // CAMBIO IMPORTANTE:
-        // Usamos whereIn para traer los 'ACTIVO' Y los 'GUARDADO'.
-        // Así, cuando guardas el carrito, no desaparece de tu vista.
         return self::whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
             ->with('cliente')
-            ->orderBy('CRD_ID', 'DESC') // Ordenamos por el más reciente primero
+            ->orderBy('CRD_ID', 'DESC')
             ->get();
     }
 
@@ -93,9 +88,9 @@ class Carrito extends Model
     {
         return self::whereHas('cliente', function ($q) use ($criterio) {
             $q->where('CLI_CEDULA', 'LIKE', "%{$criterio}%")
-              ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
+            ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
         })
-        ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO']) // También permitimos ver los guardados aquí
+        ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
         ->with(['cliente', 'detalles.producto'])
         ->get();
     }
@@ -106,13 +101,11 @@ class Carrito extends Model
 
     public function recalcularTotales()
     {
-        // CAMBIO IMPORTANTE:
-        // Cambié 'CDT_' por 'DCA_' para coincidir con tu controlador y modelo Detalle.
         $subtotal = $this->detalles->sum(function ($item) {
             return $item->DCA_CANTIDAD * $item->DCA_PRECIO_UNITARIO;
         });
 
-        $impuesto = $subtotal * 0.12; // Ejemplo IVA 12%
+        $impuesto = $subtotal * 0.12; 
         $total    = $subtotal + $impuesto;
 
         $this->update([
@@ -131,7 +124,7 @@ class Carrito extends Model
         $this->detalles()->delete();
 
         $this->update([
-            'CRD_ESTADO'    => 'VACIADO', // O puedes dejarlo ACTIVO pero en 0
+            'CRD_ESTADO'    => 'VACIADO',
             'CRD_SUBTOTAL' => 0,
             'CRD_IMPUESTO' => 0,
             'CRD_TOTAL'    => 0

@@ -115,6 +115,22 @@
                 </div>
             </a>
         </div>
+        {{-- 7. GESTIÓN DE COMPROBANTES (F5.1) --}}
+        <div class="col">
+            {{-- CORRECCIÓN: Ahora apunta al index (Paso 1 -> Paso 2) --}}
+            <a href="{{ route('comprobantes.index') }}" class="text-decoration-none text-dark">
+                <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="bi bi-receipt-cutoff display-4"></i>
+                        </div>
+                        <h3 class="h4 text-uppercase fw-bold">Gestión de Comprobantes</h3>
+                        <p class="text-muted small">Emitir facturas de ventas pendientes.</p>
+                        <span class="btn btn-dark mt-2 fw-bold">Ingresar</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
     </div>
 </div>

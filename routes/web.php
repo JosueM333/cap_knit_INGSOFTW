@@ -8,8 +8,8 @@ use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CarritoController;
-// 1. IMPORTAMOS EL NUEVO CONTROLADOR
 use App\Http\Controllers\OrdenCompraController; 
+use App\Http\Controllers\ComprobanteController;
 
 Auth::routes();
 
@@ -62,7 +62,6 @@ Route::resource('proveedores', ProveedorController::class);
 Route::resource('productos', ProductoController::class);
 
 // 2. AGREGAMOS LA RUTA RESOURCE PARA ÓRDENES DE COMPRA
-// Esto crea automáticamente las rutas: ordenes.index, ordenes.create, ordenes.store, etc.
 Route::resource('ordenes', OrdenCompraController::class);
 
 
@@ -124,3 +123,42 @@ Route::post('/carritos/{id}/buscar-producto', [CarritoController::class, 'buscar
 
 Route::post('/carritos/{id}/agregar-producto', [CarritoController::class, 'agregarProducto'])
     ->name('carritos.agregar_producto');
+
+
+/*
+|--------------------------------------------------------------------------
+| COMPROBANTES – GESTIÓN COMPLETA (F5.1 a F5.5)
+|--------------------------------------------------------------------------
+*/
+
+// F5.2: Pantalla Principal (Listado)
+Route::get('/comprobantes', [ComprobanteController::class, 'index'])
+    ->name('comprobantes.index');
+
+// F5.3: Buscar (Acción del botón "Buscar")
+Route::post('/comprobantes/buscar', [ComprobanteController::class, 'buscar'])
+    ->name('comprobantes.buscar');
+
+// F5.1: Crear - Pantalla de selección de ventas pendientes
+Route::get('/comprobantes/crear', [ComprobanteController::class, 'create'])
+    ->name('comprobantes.create');
+
+// F5.1: Guardar y emitir
+Route::post('/comprobantes', [ComprobanteController::class, 'store'])
+    ->name('comprobantes.store');
+
+// F5.4: Editar (Formulario - Solo observaciones)
+Route::get('/comprobantes/{id}/editar', [ComprobanteController::class, 'edit'])
+    ->name('comprobantes.edit');
+
+// F5.4: Actualizar (Acción PUT)
+Route::put('/comprobantes/{id}', [ComprobanteController::class, 'update'])
+    ->name('comprobantes.update');
+
+// F5.5: Anular (Acción PATCH - Borrado Lógico)
+Route::patch('/comprobantes/{id}/anular', [ComprobanteController::class, 'anular'])
+    ->name('comprobantes.anular');
+
+// F5.1 / F5.2: Ver documento generado (SIEMPRE AL FINAL DEL GRUPO)
+Route::get('/comprobantes/{id}', [ComprobanteController::class, 'show'])
+    ->name('comprobantes.show');
