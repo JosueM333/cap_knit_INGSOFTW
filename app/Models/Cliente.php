@@ -3,14 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-// 1. IMPORTANTE: Usamos Authenticatable en lugar de Model
 use Illuminate\Foundation\Auth\User as Authenticatable; 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 
-// 2. IMPORTANTE: Extendemos de Authenticatable
 class Cliente extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -33,20 +31,30 @@ class Cliente extends Authenticatable
         'CLI_ESTADO'
     ];
 
-    // 3. IMPORTANTE: Ocultar password y token por seguridad
     protected $hidden = [
         'CLI_PASSWORD',
         'remember_token',
     ];
 
-    // 4. IMPORTANTE: Decirle a Laravel cuál es la columna de la contraseña
+    /**
+     * Laravel: devolver el valor de la contraseña
+     */
     public function getAuthPassword()
     {
         return $this->CLI_PASSWORD;
     }
 
+    /**
+     * 🔴 CLAVE ABSOLUTA
+     * Laravel: decirle cuál es el nombre REAL del campo password
+     */
+    public function getAuthPasswordName()
+    {
+        return 'CLI_PASSWORD';
+    }
+
     /* =========================================================
-       TUS MÉTODOS DE LÓGICA DE NEGOCIO (SE MANTIENEN IGUAL)
+       TUS MÉTODOS DE LÓGICA DE NEGOCIO (SIN CAMBIOS)
        ========================================================= */
 
     public static function validar(array $datos, $id = null)
@@ -61,10 +69,8 @@ class Cliente extends Authenticatable
             'CLI_PASSWORD'  => $id ? 'nullable|string|min:6' : 'required|string|min:6',
         ];
 
-        // ... (Tus mensajes personalizados aquí) ...
         $mensajes = [
             'CLI_NOMBRES.required' => 'Los nombres son obligatorios',
-            // ... el resto de tus mensajes ...
         ];
 
         $validator = Validator::make($datos, $reglas, $mensajes);

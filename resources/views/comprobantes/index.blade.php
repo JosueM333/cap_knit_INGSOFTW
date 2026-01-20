@@ -73,7 +73,7 @@
                             <th>Cliente</th>
                             <th>Total</th>
                             <th>Estado</th>
-                            <th class="text-end pe-4">Acciones</th>
+                            <th class="text-end pe-4" style="min-width: 250px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -91,24 +91,26 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                {{-- BOTONES DE ACCIÓN --}}
-                                <div class="btn-group" role="group">
-                                    {{-- Ver (F5.2) --}}
-                                    <a href="{{ route('comprobantes.show', $comp->COM_ID) }}" class="btn btn-sm btn-outline-dark" title="Ver">
-                                        <i class="bi bi-eye"></i>
+                                {{-- 
+                                   AQUÍ ESTÁ EL CAMBIO SOLICITADO:
+                                   Botones explícitos con texto "Ver", "Editar", "Anular"
+                                --}}
+                                <div class="d-flex gap-2 justify-content-end">
+                                    {{-- Ver Detalle --}}
+                                    <a href="{{ route('comprobantes.show', $comp->COM_ID) }}" class="btn btn-sm btn-dark fw-bold">
+                                        Ver
                                     </a>
 
                                     @if($comp->COM_ESTADO != 'ANULADO')
-                                        {{-- F5.4: Editar --}}
-                                        <a href="{{ route('comprobantes.edit', $comp->COM_ID) }}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
+                                        {{-- F5.4: Botón "Editar" --}}
+                                        <a href="{{ route('comprobantes.edit', $comp->COM_ID) }}" class="btn btn-sm btn-primary fw-bold">
+                                            Editar
                                         </a>
 
-                                        {{-- F5.5: Anular (Abre Modal) --}}
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                title="Anular"
+                                        {{-- F5.5: Botón "Anular" --}}
+                                        <button type="button" class="btn btn-sm btn-danger fw-bold" 
                                                 onclick="abrirModalAnulacion({{ $comp->COM_ID }}, '{{ str_pad($comp->COM_ID, 6, '0', STR_PAD_LEFT) }}')">
-                                            <i class="bi bi-trash"></i>
+                                            Anular
                                         </button>
                                     @endif
                                 </div>

@@ -3,43 +3,110 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
-    use AuthenticatesUsers;
-
     /**
-     * BORRADO: protected $redirectTo = '/home';
-     * REEMPLAZADO POR LA FUNCIÓN redirectTo() DE ABAJO
+     * Constructor
+     * SOLO un guest middleware.
+     * Nunca mezclar guest de múltiples guards.
      */
-
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
     }
 
     /**
-     * Define que la columna de usuario es CLI_EMAIL
+     * 1. MOSTRAR FORMULARIO DE LOGIN
+     * GET /login
      */
-    public function username()
+    public function showLoginForm()
     {
-        return 'CLI_EMAIL';
+        if (view()->exists('auth.login')) {
+            return view('auth.login');
+        }
+
+        return view('login');
     }
 
     /**
-     * LÓGICA DE REDIRECCIÓN INTELIGENTE
-     * Esta función se ejecuta justo después de que el usuario pone bien su clave.
+     * 2. PROCESAR LOGIN
+     * POST /login
      */
-    public function redirectTo()
+    public function login(Request $request)
     {
-        // 1. Verificamos si es el Administrador
-        // (Asegúrate que 'admin@gmail.com' sea el correo exacto que tiene tu usuario admin en la BD)
-        if (auth()->user()->CLI_EMAIL == 'admin@gmail.com') {
-            return '/home'; // Lo mandamos al Panel de Gestión
+        // Validación básica
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $remember = $request->boolean('remember');
+
+        /*
+        |--------------------------------------------------------------------------
+        | INTENTO 1: ADMIN (guard web)
+        |--------------------------------------------------------------------------
+        */
+        if (Auth::guard('web')->attempt(
+            [
+                'email'    => $request->email,
+                'password' => $request->password,
+            ],
+            $remember
+        )) {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('home'));
         }
 
-        // 2. Si NO es el admin, asumimos que es un Cliente
-        return '/'; // Lo mandamos a la Tienda Pública (Welcome/Index)
+        /*
+        |--------------------------------------------------------------------------
+        | INTENTO 2: CLIENTE (guard cliente)
+        |--------------------------------------------------------------------------
+        */
+        if (Auth::guard('cliente')->attempt(
+            [
+                'CLI_EMAIL' => $request->email,
+                'password'  => $request->password,
+            ],
+            $remember
+        )) {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('shop.index'));
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SI FALLAN AMBOS
+        |--------------------------------------------------------------------------
+        */
+        throw ValidationException::withMessages([
+            'email' => ['Las credenciales no coinciden con nuestros registros.'],
+        ]);
+    }
+
+    /**
+     * 3. CERRAR SESIÓN
+     * POST /logout
+     */
+    public function logout(Request $request)
+    {
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
+
+        if (Auth::guard('cliente')->check()) {
+            Auth::guard('cliente')->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 }

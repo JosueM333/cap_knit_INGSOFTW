@@ -3,26 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Producto; // Importamos el modelo para leer la BD
+use App\Models\Producto;
+use App\Models\Carrito;
+use App\Models\CarritoDetalle;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class HomeController extends Controller
 {
+    /**
+     * Constructor para proteger rutas.
+     * SOLUCIÓN DEL BUCLE: Solo aplicamos bloqueo al dashboard.
+     */
+    public function __construct()
+    {
+        // Esto protege SOLO la ruta /home. 
+        // El resto (/, /shop, etc.) queda libre para clientes y admins.
+        $this->middleware('auth')->only('dashboard');
+    }
+
     // ==========================================
-    // VISTAS PÚBLICAS (TIENDA)
+    // ZONA PÚBLICA (TIENDA)
     // ==========================================
 
-    /**
-     * Página de Inicio (Landing Page)
-     */
     public function index()
     {
         return view('welcome');
     }
 
-    /**
-     * Catálogo de Productos
-     * Muestra todos los productos activos y visibles de la BD.
-     */
     public function products()
     {
         $productos = Producto::where('PRO_VISIBLE', 1)
@@ -32,149 +41,144 @@ class HomeController extends Controller
         return view('shop.products', compact('productos'));
     }
 
-    /**
-     * Detalle de un Producto Individual
-     * Recibe el ID, busca en la BD y muestra la vista 'shop.show'.
-     */
     public function show($id)
     {
         $producto = Producto::where('PRO_VISIBLE', 1)->findOrFail($id);
         return view('shop.show', compact('producto'));
     }
 
-    /**
-     * Vista del Carrito de Compras
-     */
     public function cart()
     {
         return view('shop.cart');
     }
 
-    /**
-     * Vista de Contacto (Estática)
-     */
     public function contact()
     {
         return view('shop.contact');
     }
 
-    public function comprar()
+    /**
+     * PROCESAR COMPRA REAL
+     */
+    public function comprar(Request $request)
     {
-        // Caso conceptual: no hay pasarela de pago todavía
+        $cart = session()->get('cart');
 
-        // Validación mínima
-        if (!session()->has('cart') || empty(session('cart'))) {
-            return redirect()
-                ->route('shop.cart')
-                ->with('error', 'No hay productos en el carrito.');
+        if (!$cart || count($cart) <= 0) {
+            return redirect()->route('shop.cart')->with('error', 'No hay productos en el carrito.');
         }
 
-        // Limpiamos el carrito (simula compra exitosa)
-        session()->forget('cart');
+        // Detectar ID del cliente de forma segura
+        $cli_id = null;
 
-        // Mensaje conceptual de confirmación
-        return redirect()
-            ->route('shop.cart')
-            ->with('success', 'Compra registrada correctamente. (Simulación)');
+        if (Auth::guard('cliente')->check()) {
+            // Es un cliente real
+            $cli_id = Auth::guard('cliente')->user()->CLI_ID;
+        } elseif (Auth::guard('web')->check()) {
+            // Es un Admin probando la compra. 
+            // IMPORTANTE: Asegúrate de tener un cliente con ID 1 en la BD para pruebas, 
+            // o esto fallará por clave foránea.
+            $cli_id = 1; 
+        } else {
+            return redirect()->route('login')->with('error', 'Debes iniciar sesión para comprar.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $subtotal = 0;
+            foreach ($cart as $id => $details) {
+                $subtotal += $details['price'] * $details['quantity'];
+            }
+            $iva = $subtotal * 0.15;
+            $total = $subtotal + $iva;
+
+            $carritoBD = Carrito::create([
+                'CLI_ID'         => $cli_id, 
+                'CRD_FECHA_CREACION' => now(),
+                'CRD_ESTADO'     => 'GUARDADO', 
+                'CRD_SUBTOTAL'   => $subtotal,
+                'CRD_IMPUESTO'   => $iva,
+                'CRD_TOTAL'      => $total
+            ]);
+
+            foreach ($cart as $id => $details) {
+                CarritoDetalle::create([
+                    'CRD_ID'              => $carritoBD->CRD_ID,
+                    'PRO_ID'              => $id,
+                    'DCA_CANTIDAD'        => $details['quantity'],
+                    'DCA_PRECIO_UNITARIO' => $details['price'],
+                    'DCA_SUBTOTAL'        => $details['price'] * $details['quantity']
+                ]);
+            }
+
+            DB::commit();
+            session()->forget('cart');
+
+            return redirect()->route('shop.index')
+                             ->with('success', '¡Compra #' . $carritoBD->CRD_ID . ' realizada con éxito!');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error al procesar la compra: ' . $e->getMessage());
+        }
     }
-
 
     // ==========================================
     // LÓGICA DEL CARRITO (SESIÓN)
     // ==========================================
 
-    /**
-     * Agregar producto al carrito
-     */
     public function addToCart($id)
     {
         $producto = Producto::findOrFail($id);
-        
-        // Obtenemos el carrito actual de la sesión
         $cart = session()->get('cart', []);
 
-        // Si el producto ya está, aumentamos cantidad
         if(isset($cart[$id])) {
             $cart[$id]['quantity']++;
         } else {
-            // Si no está, lo agregamos con sus datos de la BD
             $cart[$id] = [
                 "name" => $producto->PRO_NOMBRE,
                 "quantity" => 1,
                 "price" => $producto->PRO_PRECIO,
-                // Si no tienes columna imagen, usamos una por defecto
                 "image" => "static/img/gorra_default.jpg" 
             ];
         }
 
-        // Guardamos el carrito actualizado en la sesión
         session()->put('cart', $cart);
-
         return redirect()->back()->with('success', '¡Producto añadido a la cesta correctamente!');
     }
 
-    /**
-     * Actualizar cantidad (Para AJAX en el futuro)
-     */
     public function updateCart(Request $request)
     {
         if ($request->id && $request->quantity) {
-
-            // Límite del flujo alterno (máx. 10)
             if ($request->quantity > 10) {
-                return redirect()
-                    ->route('shop.cart')
-                    ->with('error', 'Máximo 10 unidades por producto.');
+                return redirect()->route('shop.cart')->with('error', 'Máximo 10 unidades por producto.');
             }
-
             $cart = session()->get('cart', []);
-
             if (isset($cart[$request->id])) {
                 $cart[$request->id]['quantity'] = $request->quantity;
                 session()->put('cart', $cart);
             }
-
             session()->flash('success', 'Cesta actualizada');
         }
         return redirect()->route('shop.cart');
     }
 
-
-    /**
-     * Eliminar del carrito (Para AJAX en el futuro)
-     */
     public function removeCart(Request $request)
     {
         if ($request->id) {
-
             $cart = session()->get('cart', []);
-
-            // E2: Producto no existe
             if (!isset($cart[$request->id])) {
-                return redirect()
-                    ->route('shop.cart')
-                    ->with('error', 'El producto no existe en el carrito.');
+                return redirect()->route('shop.cart')->with('error', 'El producto no existe.');
             }
-
             unset($cart[$request->id]);
-
-            // Si ya no quedan productos → carrito vacío
             if (empty($cart)) {
                 session()->forget('cart');
-
-                return redirect()
-                    ->route('shop.cart')
-                    ->with('success', 'Tu carrito está vacío.');
+                return redirect()->route('shop.cart')->with('success', 'Tu carrito está vacío.');
             }
-
             session()->put('cart', $cart);
-
-            return redirect()
-                ->route('shop.cart')
-                ->with('success', 'Producto eliminado correctamente.');
+            return redirect()->route('shop.cart')->with('success', 'Producto eliminado.');
         }
-
-        // Seguridad por defecto
         return redirect()->route('shop.cart');
     }
 
@@ -183,8 +187,8 @@ class HomeController extends Controller
     // ==========================================
 
     /**
-     * Panel de Control (Dashboard)
-     * Solo accesible si estás logueado
+     * Panel Principal del Admin
+     * Requiere autenticación (ver __construct)
      */
     public function dashboard()
     {
