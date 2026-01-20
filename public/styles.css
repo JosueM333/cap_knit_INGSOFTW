@@ -1,0 +1,213 @@
+/* =====================================================
+   styles.css — ALTO CONTRASTE + ACCESIBILIDAD (WCAG 2.2)
+===================================================== */
+
+/* =====================================================
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    background: #000000;
+    color: #ffffff;
+    padding: 10px 15px;
+    text-decoration: none;
+    z-index: 9999;
+    border: 2px solid #ffff00;
+    font-weight: bold;
+}
+
+.skip-link:focus {
+    top: 10px;
+    outline: 3px solid #ffff00;
+}
+
+/* =====================================================
+   MODO ALTO CONTRASTE — BASE
+===================================================== */
+body.high-contrast {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* =====================================================
+   ANULACIÓN DE BOOTSTRAP (CLAVE)
+===================================================== */
+body.high-contrast.bg-light,
+body.high-contrast .bg-light,
+body.high-contrast .bg-white,
+body.high-contrast header,
+body.high-contrast main,
+body.high-contrast section,
+body.high-contrast footer,
+body.high-contrast .container,
+body.high-contrast .container-fluid,
+body.high-contrast .row {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* =====================================================
+   TARJETAS / LISTAS
+===================================================== */
+body.high-contrast .card,
+body.high-contrast .list-group-item {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+/* =====================================================
+   TEXTOS BOOTSTRAP
+===================================================== */
+body.high-contrast .text-dark,
+body.high-contrast .text-muted,
+body.high-contrast .text-secondary {
+    color: #ffffff !important;
+}
+
+/* =====================================================
+   TÍTULOS (NO SUBRAYADOS)
+===================================================== */
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3,
+body.high-contrast h4,
+body.high-contrast h5 {
+    color: #ffff00 !important;
+    text-decoration: none !important;
+}
+
+/* =====================================================
+   TEXTO NORMAL (NO SUBRAYADO)
+===================================================== */
+body.high-contrast p,
+body.high-contrast span,
+body.high-contrast li,
+body.high-contrast label {
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+/* =====================================================
+   ENLACES (ÚNICOS SUBRAYADOS — WCAG)
+===================================================== */
+body.high-contrast a {
+    color: #00ffff !important;
+    text-decoration: underline !important;
+}
+
+/* =====================================================
+   BOTONES
+===================================================== */
+body.high-contrast .btn,
+body.high-contrast button {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+body.high-contrast .btn:hover,
+body.high-contrast .btn:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* =====================================================
+   INPUTS / FORMULARIOS
+===================================================== */
+body.high-contrast input,
+body.high-contrast select,
+body.high-contrast textarea {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+/* =====================================================
+   HERO (EXCEPCIÓN CONTROLADA)
+===================================================== */
+body.high-contrast .hero-section {
+    background:
+            linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+            url('/static/img/background.jpg') center / cover !important;
+}
+
+body.high-contrast .hero-section .text-white {
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+/* =====================================================
+   BOTÓN ALTO CONTRASTE
+===================================================== */
+#contrast-toggle {
+    border: 2px solid #6c757d;
+    background: transparent;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+#contrast-toggle[aria-pressed="true"] {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+/* =====================================================
+   FOCUS (ALTO CONTRASTE PRIORIZA)
+===================================================== */
+body.high-contrast *:focus {
+    outline: 4px solid #ffff00 !important;
+    outline-offset: 3px !important;
+}
+
+/* Focus normal (modo claro) */
+*:focus {
+    outline: 3px solid #0056b3 !important;
+    outline-offset: 2px !important;
+}
+
+/* =====================================================
+   TEXTO SOLO PARA SCREEN READERS
+===================================================== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.hero-section {
+    text-align: center;
+}
+
+.hero-section h1 {
+    max-width: 900px;
+    margin: 0 auto 1.5rem auto;
+    line-height: 1.25;
+    letter-spacing: 0.08em;
+    font-weight: 300;
+}
+
+.hero-section p {
+    max-width: 640px;
+    margin: 0 auto 2.5rem auto;
+    line-height: 1.6;
+    font-size: 1.15rem;
+}
+
+/* Responsive fino */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        letter-spacing: 0.04em;
+    }
+}
+
