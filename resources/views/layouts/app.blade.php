@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión</title>
+    <title>Sistema de Gestión - Cap & Knit</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -24,21 +24,26 @@
 
         <nav class="d-none d-lg-block">
             <ul class="d-flex gap-4 list-unstyled text-uppercase small mb-0 align-items-center">
-                <li><a href="{{ url('/home') }}" class="text-decoration-none text-secondary">Admin</a></li>
-                <li><a href="{{ url('/') }}" class="text-decoration-none text-secondary">Tienda</a></li>
+                <li><a href="{{ route('home') }}" class="text-decoration-none text-secondary fw-bold">Admin</a></li>
+                <li><a href="{{ route('shop.index') }}" class="text-decoration-none text-secondary fw-bold">Tienda</a></li>
             </ul>
         </nav>
 
         <div class="d-flex align-items-center gap-3">
             @if(Auth::check() || Auth::guard('cliente')->check())
-                <span class="fw-bold"><i class="bi bi-person-check-fill"></i> Conectado</span>
+                <span class="fw-bold text-success">
+                    <i class="bi bi-person-check-fill" aria-hidden="true"></i> 
+                    <span class="d-none d-md-inline">Conectado</span>
+                </span>
                 
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 fw-bold">Salir</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 fw-bold" aria-label="Cerrar sesión">
+                        Salir
+                    </button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="btn btn-sm btn-dark">Iniciar Sesión</a>
+                <a href="{{ route('login') }}" class="btn btn-sm btn-dark fw-bold">Iniciar Sesión</a>
             @endif
         </div>
 
@@ -46,11 +51,27 @@
 </header>
 
 <main class="container py-4 flex-grow-1">
+    {{-- Alertas Globales --}}
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success border-success fw-bold" role="alert">
+            <i class="bi bi-check-circle me-2" aria-hidden="true"></i> {{ session('success') }}
+        </div>
     @endif
     
     @yield('content')
 </main>
 
-<script src="
+<footer class="bg-white border-top py-3 mt-auto text-center text-muted small">
+    <div class="container">
+        &copy; {{ date('Y') }} Cap & Knit - Panel de Gestión
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- <script src="{{ asset('js/app.js') }}"></script> --}}
+
+</body>
+</html>

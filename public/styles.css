@@ -1,213 +1,249 @@
 /* =====================================================
-   styles.css — ALTO CONTRASTE + ACCESIBILIDAD (WCAG 2.2)
-===================================================== */
+   styles.css — DISEÑO "WINTER BLUE" + ACCESIBILIDAD AA
+   ===================================================== */
 
-/* =====================================================
-.skip-link {
-    position: absolute;
-    top: -40px;
-    left: 10px;
-    background: #000000;
+:root {
+    /* Paleta de Colores (Tema Azul/Invierno) */
+    --color-primary: #0f172a;       /* Azul Marino Oscuro (Header/Footer) */
+    --color-accent: #2563eb;        /* Azul Vibrante (Botones/Enlaces) */
+    --color-accent-hover: #1e40af;  /* Azul Oscuro (Hover) */
+    --color-bg: #f8fafc;            /* Gris Hielo (Fondo) */
+    --color-text: #334155;          /* Gris Pizarra (Texto) */
+    --color-heading: #0f172a;       /* Negro Azulado (Títulos) */
+    
+    /* Variables de Estilo */
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --radius: 0.75rem;
+}
+
+/* --- BASE --- */
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, h4, h5, .logo-text, .fw-bold {
+    color: var(--color-heading);
+}
+
+/* --- FOCUS VISIBLE (ACCESIBILIDAD) --- */
+*:focus {
+    outline: 3px solid var(--color-accent) !important;
+    outline-offset: 2px !important;
+}
+
+/* --- HEADER & FOOTER (AZUL MARINO) --- */
+header, footer {
+    background-color: var(--color-primary) !important; /* Forzamos azul */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Enlaces del header */
+header a, footer a, header i, footer i, header span {
+    color: #e2e8f0 !important; /* Blanco hueso */
+    transition: color 0.2s;
+}
+
+header a:hover, footer a:hover {
+    color: #ffffff !important;
+    opacity: 1;
+}
+
+/* --- TARJETAS (BLANCAS FLOTANTES) --- */
+.card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+/* Efecto Hover (Animación) */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--color-accent);
+}
+
+.card img {
+    transition: transform 0.5s ease;
+}
+
+.card:hover img {
+    transform: scale(1.05); /* Zoom suave a la imagen */
+}
+
+/* --- BOTONES PERSONALIZADOS --- */
+.btn-dark {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+.btn-dark:hover {
+    background-color: #1e293b;
+}
+
+.btn-outline-dark {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+.btn-outline-dark:hover {
+    background-color: var(--color-primary);
     color: #ffffff;
-    padding: 10px 15px;
-    text-decoration: none;
-    z-index: 9999;
-    border: 2px solid #ffff00;
-    font-weight: bold;
 }
 
-.skip-link:focus {
-    top: 10px;
-    outline: 3px solid #ffff00;
+/* Botones de acción principal (Añadir carrito) */
+.btn-success, .btn-accent {
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: #ffffff;
 }
+.btn-success:hover {
+    background-color: var(--color-accent-hover) !important;
+}
+
+/* --- ANIMACIÓN DE ENTRADA (FADE IN) --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Clase para aplicar a las columnas de productos */
+.animate-entry {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0; /* Invisible al inicio */
+}
+
+/* Respetar preferencia de usuario de no movimiento */
+@media (prefers-reduced-motion: reduce) {
+    .card, .card img, .animate-entry {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+}
+
+/* --- UTILIDADES ACCESIBILIDAD --- */
+.sr-only, .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+    position: absolute; top: -50px; left: 10px;
+    background: var(--color-primary); color: #ffffff;
+    padding: 10px 15px; text-decoration: none; z-index: 9999;
+    border: 2px solid var(--color-accent); font-weight: bold;
+    transition: top 0.2s; border-radius: 0 0 5px 5px;
+}
+
+.skip-link:focus { top: 0; outline: none; }
+
+/* Subrayar Enlaces (Toggle) */
+body.show-underlines a {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 2px !important;
+}
+
+/* Tamaño de fuente (Toggle) */
+html.font-sm { font-size: 85%; }
+html.font-lg { font-size: 115%; }
+html.font-xl { font-size: 130%; }
+
+/* Widget de accesibilidad */
+.accessibility-widget {
+    position: fixed; bottom: 20px; right: 20px; z-index: 1050;
+    display: flex; flex-direction: column; align-items: end;
+}
+
+.access-menu {
+    margin-bottom: 10px; width: 280px; display: none;
+    background-color: #ffffff; border: 1px solid #dee2e6;
+    border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.access-menu.show { display: block; animation: fadeInUp 0.2s ease-out; }
+
 
 /* =====================================================
-   MODO ALTO CONTRASTE — BASE
+   ALTO CONTRASTE (PRIORIDAD FINAL - SOBREESCRIBE TODO)
 ===================================================== */
 body.high-contrast {
     background-color: #000000 !important;
     color: #ffffff !important;
 }
 
-/* =====================================================
-   ANULACIÓN DE BOOTSTRAP (CLAVE)
-===================================================== */
-body.high-contrast.bg-light,
-body.high-contrast .bg-light,
-body.high-contrast .bg-white,
+/* Reset visual masivo para eliminar azul/gris */
 body.high-contrast header,
-body.high-contrast main,
-body.high-contrast section,
 body.high-contrast footer,
-body.high-contrast .container,
-body.high-contrast .container-fluid,
-body.high-contrast .row {
+body.high-contrast section,
+body.high-contrast .card,
+body.high-contrast .dropdown-menu,
+body.high-contrast .list-group-item,
+body.high-contrast .bg-light,
+body.high-contrast .access-menu {
     background-color: #000000 !important;
     color: #ffffff !important;
+    border-color: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
 }
 
-/* =====================================================
-   TARJETAS / LISTAS
-===================================================== */
+/* Bordes obligatorios */
 body.high-contrast .card,
-body.high-contrast .list-group-item {
-    background-color: #000000 !important;
-    color: #ffffff !important;
+body.high-contrast .btn,
+body.high-contrast .form-control,
+body.high-contrast .dropdown-menu {
     border: 2px solid #ffffff !important;
 }
 
-/* =====================================================
-   TEXTOS BOOTSTRAP
-===================================================== */
-body.high-contrast .text-dark,
-body.high-contrast .text-muted,
-body.high-contrast .text-secondary {
-    color: #ffffff !important;
-}
-
-/* =====================================================
-   TÍTULOS (NO SUBRAYADOS)
-===================================================== */
-body.high-contrast h1,
-body.high-contrast h2,
-body.high-contrast h3,
-body.high-contrast h4,
-body.high-contrast h5 {
+/* Textos clave en Amarillo */
+body.high-contrast h1, body.high-contrast h2, body.high-contrast h3,
+body.high-contrast h4, body.high-contrast h5, body.high-contrast strong,
+body.high-contrast .fw-bold, body.high-contrast .navbar-brand {
     color: #ffff00 !important;
-    text-decoration: none !important;
 }
 
-/* =====================================================
-   TEXTO NORMAL (NO SUBRAYADO)
-===================================================== */
-body.high-contrast p,
-body.high-contrast span,
-body.high-contrast li,
-body.high-contrast label {
-    color: #ffffff !important;
-    text-decoration: none !important;
-}
-
-/* =====================================================
-   ENLACES (ÚNICOS SUBRAYADOS — WCAG)
-===================================================== */
-body.high-contrast a {
+/* Enlaces en Cian y Subrayados */
+body.high-contrast a:not(.btn) {
     color: #00ffff !important;
     text-decoration: underline !important;
 }
 
-/* =====================================================
-   BOTONES
-===================================================== */
-body.high-contrast .btn,
-body.high-contrast button {
+/* Botones en Alto Contraste */
+body.high-contrast .btn {
     background-color: #000000 !important;
     color: #ffffff !important;
+    font-weight: bold !important;
     border: 2px solid #ffffff !important;
 }
-
-body.high-contrast .btn:hover,
-body.high-contrast .btn:focus {
+body.high-contrast .btn:hover {
     background-color: #ffffff !important;
     color: #000000 !important;
 }
 
-/* =====================================================
-   INPUTS / FORMULARIOS
-===================================================== */
-body.high-contrast input,
-body.high-contrast select,
-body.high-contrast textarea {
+/* Inputs */
+body.high-contrast input, body.high-contrast select, body.high-contrast textarea {
     background-color: #000000 !important;
     color: #ffffff !important;
     border: 2px solid #ffffff !important;
 }
 
-/* =====================================================
-   HERO (EXCEPCIÓN CONTROLADA)
-===================================================== */
-body.high-contrast .hero-section {
-    background:
-            linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-            url('/static/img/background.jpg') center / cover !important;
+/* Desactivar animaciones decorativas en alto contraste */
+body.high-contrast .card:hover, 
+body.high-contrast .animate-entry {
+    transform: none !important;
+    animation: none !important;
 }
 
-body.high-contrast .hero-section .text-white {
-    color: #ffffff !important;
-    text-shadow: 2px 2px 4px #000000;
-}
-
-/* =====================================================
-   BOTÓN ALTO CONTRASTE
-===================================================== */
-#contrast-toggle {
-    border: 2px solid #6c757d;
-    background: transparent;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    margin-left: 10px;
-}
-
-#contrast-toggle[aria-pressed="true"] {
-    background: #000000;
-    color: #ffffff;
-    border-color: #ffffff;
-}
-
-/* =====================================================
-   FOCUS (ALTO CONTRASTE PRIORIZA)
-===================================================== */
+/* Focus Extremo */
 body.high-contrast *:focus {
     outline: 4px solid #ffff00 !important;
     outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px #000000 !important;
 }
-
-/* Focus normal (modo claro) */
-*:focus {
-    outline: 3px solid #0056b3 !important;
-    outline-offset: 2px !important;
-}
-
-/* =====================================================
-   TEXTO SOLO PARA SCREEN READERS
-===================================================== */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-.hero-section {
-    text-align: center;
-}
-
-.hero-section h1 {
-    max-width: 900px;
-    margin: 0 auto 1.5rem auto;
-    line-height: 1.25;
-    letter-spacing: 0.08em;
-    font-weight: 300;
-}
-
-.hero-section p {
-    max-width: 640px;
-    margin: 0 auto 2.5rem auto;
-    line-height: 1.6;
-    font-size: 1.15rem;
-}
-
-/* Responsive fino */
-@media (max-width: 768px) {
-    .hero-section h1 {
-        letter-spacing: 0.04em;
-    }
-}
-
