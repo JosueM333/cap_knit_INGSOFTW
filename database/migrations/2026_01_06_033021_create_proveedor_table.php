@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('PRV_PERSONA_CONTACTO', 80)->nullable();
             
             // PRV_ESTADO NUMBER(1) DEFAULT 1
-            $table->integer('PRV_ESTADO')->default(1);
+            
             
             // Timestamps
             $table->timestamp('PRV_CREATED_AT')->useCurrent();

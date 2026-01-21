@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('PRO_TALLA', 10)->nullable();
             $table->string('PRO_MARCA', 50)->nullable();
             
-            $table->integer('PRO_ESTADO')->default(1); // 1=Activo
-            $table->integer('PRO_VISIBLE')->default(1); // 1=Visible en web
+            
+            
             
             $table->timestamp('PRO_CREATED_AT')->useCurrent();
             $table->timestamp('PRO_UPDATED_AT')->useCurrent()->useCurrentOnUpdate();

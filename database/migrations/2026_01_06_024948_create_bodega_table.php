@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('BOD_DESCRIPCION', 200)->nullable();
             
             // BOD_ESTADO NUMBER(1) DEFAULT 1
-            $table->integer('BOD_ESTADO')->default(1);
+            
             
             // Timestamps personalizados
             $table->timestamp('BOD_CREATED_AT')->useCurrent();

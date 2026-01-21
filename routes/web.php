@@ -19,7 +19,7 @@ use App\Http\Controllers\ComprobanteController;
 |--------------------------------------------------------------------------
 */
 
-// Rutas de autenticación (Login, Logout, Registro, Reset Password)
+// Rutas de autenticación
 Auth::routes();
 
 // ==================================================
@@ -39,7 +39,7 @@ Route::get('/shop/add-to-cart/{id}', [HomeController::class, 'addToCart'])->name
 Route::patch('/shop/update-cart', [HomeController::class, 'updateCart'])->name('update.cart');
 Route::delete('/shop/remove-from-cart', [HomeController::class, 'removeCart'])->name('remove.from.cart');
 
-// Confirmar Compra (Permite clientes reales y admins probando)
+// Confirmar Compra
 Route::post('/shop/comprar', [HomeController::class, 'comprar'])
     ->name('shop.comprar')
     ->middleware('auth:cliente,web'); 
@@ -47,7 +47,6 @@ Route::post('/shop/comprar', [HomeController::class, 'comprar'])
 
 // ==================================================
 // 🔒 ZONA ADMIN (PROTEGIDA)
-// Solo accesible si estás logueado como Admin (users table)
 // ==================================================
 
 Route::middleware(['auth'])->group(function () {
@@ -55,14 +54,20 @@ Route::middleware(['auth'])->group(function () {
     // 1. Dashboard Principal
     Route::get('/home', [HomeController::class, 'dashboard'])->name('home');
 
-    // 2. Recursos CRUD Básicos
-    Route::resource('clientes', ClienteController::class);
+    // 2. CLIENTES
+    // La clave aquí es parameters(['clientes' => 'id'])
+    // Esto fuerza a la ruta a ser /clientes/{id}/edit en lugar de /clientes/{cliente}/edit
+    Route::resource('clientes', ClienteController::class)->parameters([
+        'clientes' => 'id'
+    ]);
+
+    // 3. Otros Recursos CRUD Básicos
     Route::resource('bodegas', BodegaController::class);
     Route::resource('proveedores', ProveedorController::class);
     Route::resource('productos', ProductoController::class);
     Route::resource('ordenes', OrdenCompraController::class);
 
-    // 3. Gestión de Carritos (Admin)
+    // 4. Gestión de Carritos (Admin)
     Route::prefix('carritos')->group(function () {
         Route::get('/', [CarritoController::class, 'index'])->name('carritos.index');
         Route::get('/consultar', [CarritoController::class, 'consultar'])->name('carritos.consultar');
@@ -70,7 +75,6 @@ Route::middleware(['auth'])->group(function () {
         // Búsquedas
         Route::post('/buscar-carrito', [CarritoController::class, 'buscarCarrito'])->name('carritos.buscar_carrito');
         Route::post('/buscar-cliente', [CarritoController::class, 'buscarCliente'])->name('carritos.buscar_cliente');
-        // Redirección de seguridad para GET en buscar
         Route::get('/buscar-cliente', function () { return redirect()->route('carritos.index'); });
 
         // Operaciones sobre carritos específicos
@@ -86,24 +90,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/agregar-producto', [CarritoController::class, 'agregarProducto'])->name('carritos.agregar_producto');
     });
 
-    // 4. Gestión de Comprobantes (Admin)
+    // 5. Gestión de Comprobantes (Admin)
     Route::prefix('comprobantes')->group(function () {
-        // Listado y Búsqueda
         Route::get('/', [ComprobanteController::class, 'index'])->name('comprobantes.index');
         Route::post('/buscar', [ComprobanteController::class, 'buscar'])->name('comprobantes.buscar');
         
-        // Crear Factura (Emitir)
+        // Crear Factura
         Route::get('/crear', [ComprobanteController::class, 'create'])->name('comprobantes.create');
-        Route::post('/', [ComprobanteController::class, 'store'])->name('comprobantes.store'); // <-- Esta usa el Modal de Crear
+        Route::post('/', [ComprobanteController::class, 'store'])->name('comprobantes.store');
         
         // Editar y Ver
         Route::get('/{id}/editar', [ComprobanteController::class, 'edit'])->name('comprobantes.edit');
         Route::put('/{id}', [ComprobanteController::class, 'update'])->name('comprobantes.update');
         Route::get('/{id}', [ComprobanteController::class, 'show'])->name('comprobantes.show');
         
-        // Anular (Borrado Lógico)
-        // IMPORTANTE: Esta es la que usa el Modal de Anulación con @method('PATCH')
+        // Anular
         Route::patch('/{id}/anular', [ComprobanteController::class, 'anular'])->name('comprobantes.anular');
     });
 
-}); // Fin del grupo Admin
+});

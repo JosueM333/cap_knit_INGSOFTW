@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::create('DETALLE_CARRITO', function (Blueprint $table) {
             $table->increments('DCA_ID');
-            $table->unsignedInteger('CRD_ID');
-            $table->unsignedInteger('PRO_ID');
+            $table->unsignedBigInteger('CRD_ID');
+            $table->unsignedBigInteger('PRO_ID');
             $table->integer('DCA_CANTIDAD');
             $table->decimal('DCA_PRECIO_UNITARIO', 10, 2);
             $table->decimal('DCA_SUBTOTAL', 10, 2);

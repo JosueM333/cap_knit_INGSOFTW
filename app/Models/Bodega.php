@@ -21,12 +21,10 @@ class Bodega extends Model
     protected $fillable = [
         'BOD_NOMBRE',
         'BOD_UBICACION',
-        'BOD_DESCRIPCION',
-        'BOD_ESTADO'
+        'BOD_DESCRIPCION'
+        
     ];
 
-    
-    
      
     public static function validar(array $datos, $id = null)
     {
@@ -97,7 +95,6 @@ class Bodega extends Model
         $this->update($datos);
     }
 
-    
     
     
     public function eliminarBodega()

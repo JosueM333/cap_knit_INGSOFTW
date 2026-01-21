@@ -1,20 +1,20 @@
-@extends('layouts.app')
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 text-uppercase">Gestión de Clientes</h1>
-    <a href="{{ route('clientes.create') }}" class="btn btn-dark text-uppercase small">
+    <a href="<?php echo e(route('clientes.create')); ?>" class="btn btn-dark text-uppercase small">
         + Crear Cliente
     </a>
 </div>
 
 <div class="card shadow-sm mb-4 border-0">
     <div class="card-body">
-        <form action="{{ route('clientes.index') }}" method="GET" class="row g-2">
+        <form action="<?php echo e(route('clientes.index')); ?>" method="GET" class="row g-2">
             <div class="col-md-10">
                 <input type="text" name="search" class="form-control" 
                        placeholder="Buscar por Cédula, Apellido o Email..." 
-                       value="{{ request('search') }}">
+                       value="<?php echo e(request('search')); ?>">
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-outline-dark w-100">Buscar</button>
@@ -23,12 +23,13 @@
     </div>
 </div>
 
-@if(session('success'))
+<?php if(session('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
+        <?php echo e(session('success')); ?>
+
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-@endif
+<?php endif; ?>
 
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
@@ -44,44 +45,45 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($clientes as $cli)
+                <?php $__empty_1 = true; $__currentLoopData = $clientes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cli): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
-                    {{-- CAMBIO: Usamos minúsculas para acceder a las propiedades --}}
-                    <td>{{ $cli->cli_cedula }}</td>
-                    <td>{{ $cli->cli_apellidos }} {{ $cli->cli_nombres }}</td>
-                    <td>{{ $cli->cli_email }}</td>
-                    <td>{{ $cli->cli_telefono }}</td>
+                    
+                    <td><?php echo e($cli->cli_cedula); ?></td>
+                    <td><?php echo e($cli->cli_apellidos); ?> <?php echo e($cli->cli_nombres); ?></td>
+                    <td><?php echo e($cli->cli_email); ?></td>
+                    <td><?php echo e($cli->cli_telefono); ?></td>
                     <td>
-                        @if($cli->cli_estado === 'ACTIVO')
+                        <?php if($cli->cli_estado === 'ACTIVO'): ?>
                             <span class="badge bg-success">Activo</span>
-                        @else
+                        <?php else: ?>
                             <span class="badge bg-secondary">Inactivo</span>
-                        @endif
+                        <?php endif; ?>
                     </td>
                     <td class="text-end">
-                        {{-- SOLUCIÓN: Usamos $cli->cli_id (minúscula) --}}
-                        <a href="{{ route('clientes.edit', ['id' => $cli->cli_id]) }}" 
+                        
+                        <a href="<?php echo e(route('clientes.edit', ['id' => $cli->cli_id])); ?>" 
                            class="btn btn-sm btn-outline-primary me-1">
                            Editar
                         </a>
                         
-                        <form action="{{ route('clientes.destroy', ['id' => $cli->cli_id]) }}" 
+                        <form action="<?php echo e(route('clientes.destroy', ['id' => $cli->cli_id])); ?>" 
                               method="POST" 
                               class="d-inline" 
                               onsubmit="return confirm('¿Está seguro de eliminar este cliente?');">
-                            @csrf
-                            @method('DELETE')
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('DELETE'); ?>
                             <button type="submit" class="btn btn-sm btn-outline-danger">Borrar</button>
                         </form>
                     </td>
                 </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
                     <td colspan="6" class="text-center py-4 text-muted">No se encontraron clientes.</td>
                 </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\USUARIO\Herd\cap-knit\resources\views/clientes/index.blade.php ENDPATH**/ ?>

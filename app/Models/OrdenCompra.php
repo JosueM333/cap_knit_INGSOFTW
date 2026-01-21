@@ -67,7 +67,7 @@ class OrdenCompra extends Model
                 'PRV_ID'     => $datos['PRV_ID'],
                 'ORD_FECHA'  => now(),
                 'ORD_TOTAL'  => 0,
-                'ORD_ESTADO' => 'P', 
+                'ORD_ESTADO' => 'A', 
                 // 'ORD_OBSERVACION' => $datos['ORD_OBSERVACION'] ?? null 
             ]);
 

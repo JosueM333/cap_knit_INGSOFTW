@@ -12,19 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('CLIENTE', function (Blueprint $table) {
-            $table->id('CLI_ID'); // PK
-            $table->string('CLI_NOMBRES');
-            $table->string('CLI_APELLIDOS');
-            $table->string('CLI_CEDULA')->unique();
-            $table->string('CLI_EMAIL')->unique();
-            $table->string('CLI_TELEFONO')->nullable();
-            $table->string('CLI_DIRECCION')->nullable();
+            $table->id('CLI_ID');
+            $table->string('CLI_NOMBRES', 80);
+            $table->string('CLI_APELLIDOS', 80);
+            $table->string('CLI_CEDULA', 10)->unique();
+            $table->string('CLI_EMAIL', 80)->unique();
+            $table->string('CLI_TELEFONO', 15);
+            $table->string('CLI_DIRECCION', 100);
             $table->string('CLI_PASSWORD');
-            $table->string('CLI_ESTADO')->default('ACTIVO');
-            $table->timestamps();
+            $table->string('CLI_ESTADO', 20)->default('ACTIVO'); // Necesario para borrado lógico
+            $table->timestamps(); // created_at y updated_at
         });
     }
-
 
     /**
      * Reverse the migrations.

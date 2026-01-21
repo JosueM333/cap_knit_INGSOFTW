@@ -27,9 +27,7 @@ class Producto extends Model
         'PRO_PRECIO',
         'PRO_COLOR',
         'PRO_TALLA',
-        'PRO_MARCA',
-        'PRO_ESTADO',
-        'PRO_VISIBLE'
+        'PRO_MARCA'
     ];
 
   

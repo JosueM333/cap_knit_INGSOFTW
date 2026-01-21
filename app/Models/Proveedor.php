@@ -24,8 +24,8 @@ class Proveedor extends Model
         'PRV_TELEFONO',
         'PRV_EMAIL',
         'PRV_DIRECCION',
-        'PRV_PERSONA_CONTACTO',
-        'PRV_ESTADO'
+        'PRV_PERSONA_CONTACTO'
+        
     ];
 
 
