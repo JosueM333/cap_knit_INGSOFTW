@@ -8,28 +8,23 @@ use Illuminate\Validation\ValidationException;
 
 class BodegaController extends Controller
 {
-   
     public function index(Request $request)
     {
         $criterio = $request->input('search');
 
         if ($criterio) {
-            
             $bodegas = Bodega::buscarBodega($criterio);
         } else {
-            
             $bodegas = Bodega::obtenerBodegas();
         }
 
         return view('bodegas.index', compact('bodegas'));
     }
 
-
     public function create()
     {
         return view('bodegas.create');
     }
-
 
     public function store(Request $request)
     {
@@ -47,14 +42,11 @@ class BodegaController extends Controller
         }
     }
 
-
     public function edit($id)
     {
-        
         $bodega = Bodega::obtenerBodega($id);
         return view('bodegas.edit', compact('bodega'));
     }
-
 
     public function update(Request $request, $id)
     {
@@ -73,14 +65,14 @@ class BodegaController extends Controller
         }
     }
 
- 
     public function destroy($id)
     {
         $bodega = Bodega::obtenerBodega($id);
         
+        // Ejecuta borrado físico
         $bodega->eliminarBodega();
 
         return redirect()->route('bodegas.index')
-                         ->with('success', 'Bodega eliminada físicamente.');
+                         ->with('success', 'Bodega eliminada permanentemente.');
     }
 }

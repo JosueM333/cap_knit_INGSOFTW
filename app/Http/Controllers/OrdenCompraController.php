@@ -11,52 +11,38 @@ use Illuminate\Database\QueryException;
 
 class OrdenCompraController extends Controller
 {
-    /**
-     * F2.2 Consultar y F2.3 Buscar
-     */
     public function index(Request $request)
     {
         try {
             $criterio = $request->input('criterio');
 
             if ($criterio) {
-                // F2.3: Ejecuta búsqueda filtrada
                 $ordenes = OrdenCompra::buscar($criterio);
 
-                // F2.3 Flujo Alterno: Mensaje de error si no encuentra nada
                 if ($ordenes->isEmpty()) {
-                    // CORRECCIÓN IMPORTANTE: 
-                    // No redireccionamos (return redirect) porque eso borraba la búsqueda.
-                    // Usamos flash para mostrar el mensaje y dejamos que la vista cargue vacía.
                     session()->flash('error', 'Orden de compra no localizada.');
                 }
             } else {
-                // F2.2: Consulta general (Solo si no hay búsqueda)
                 $ordenes = OrdenCompra::with('proveedor')->orderBy('ORD_ID', 'desc')->get();
             }
 
             return view('ordenes.index', compact('ordenes'));
 
         } catch (QueryException $e) {
-            // E1: No hay conexión con la base de datos.
             return redirect()->route('home')
                              ->with('error', 'E1: No hay conexión con la base de datos.');
         }
     }
 
-    /**
-     * F2.1: Mostrar Formulario Crear
-     */
     public function create()
     {
-        $proveedores = Proveedor::where('PRV_ESTADO', 1)->get();
-        $productos = Producto::where('PRO_ESTADO', 1)->get();
+        // CORRECCIÓN: Traer todos (ya no existen columnas de estado)
+        $proveedores = Proveedor::all();
+        $productos = Producto::all();
+        
         return view('ordenes.create', compact('proveedores', 'productos'));
     }
 
-    /**
-     * F2.1: Guardar
-     */
     public function store(Request $request)
     {
         try {
@@ -76,50 +62,41 @@ class OrdenCompraController extends Controller
         }
     }
     
-    /**
-     * Ver Detalle (Usado por F2.4 y F2.5 para localizar)
-     */
     public function show($id)
     {
         $orden = OrdenCompra::with(['proveedor', 'detalles.producto'])->findOrFail($id);
         return view('ordenes.show', compact('orden'));
     }
 
-    /**
-     * F2.4: Mostrar Formulario de Edición
-     */
     public function edit($id)
     {
         $orden = OrdenCompra::with(['detalles'])->findOrFail($id);
 
-        // F2.4 Restricción: Solo editar si está Pendiente
-        if ($orden->ORD_ESTADO !== 'P') {
+        // Validar Estado PENDIENTE
+        if ($orden->ORD_ESTADO !== 'PENDIENTE') {
             return redirect()->route('ordenes.index')
-                             ->with('error', 'Orden no editable: Ya procesada.');
+                             ->with('error', 'Orden no editable: Ya fue procesada o anulada.');
         }
 
-        $proveedores = Proveedor::where('PRV_ESTADO', 1)->get();
-        $productos = Producto::where('PRO_ESTADO', 1)->get();
+        // CORRECCIÓN: Traer todos
+        $proveedores = Proveedor::all();
+        $productos = Producto::all();
 
         return view('ordenes.edit', compact('orden', 'proveedores', 'productos'));
     }
 
-    /**
-     * F2.4: Procesar Actualización
-     */
     public function update(Request $request, $id)
     {
         try {
             $orden = OrdenCompra::findOrFail($id);
 
-            // F2.4 Flujo Alterno: Validar estado antes de guardar
-            if ($orden->ORD_ESTADO !== 'P') {
+            if ($orden->ORD_ESTADO !== 'PENDIENTE') {
                 return redirect()->route('ordenes.index')
-                                 ->with('error', 'Orden no editable: Ya procesada.');
+                                 ->with('error', 'Orden no editable: Ya fue procesada o anulada.');
             }
 
             $datos = $request->all();
-            OrdenCompra::validar($datos); // Reutilizamos la validación de F2.1
+            OrdenCompra::validar($datos); 
             $orden->actualizarOrdenCompleta($datos);
 
             return redirect()->route('ordenes.index')
@@ -132,14 +109,13 @@ class OrdenCompraController extends Controller
         }
     }
 
-    /**
-     * F2.5: Anular (Borrado Lógico)
-     */
     public function destroy($id)
     {
         try {
             $orden = OrdenCompra::findOrFail($id);
-            $orden->anular(); // Cambia estado a 'C'
+            
+            // Anulación (Borrado Lógico del documento)
+            $orden->anular(); 
 
             return redirect()->route('ordenes.index')
                              ->with('success', 'Orden anulada correctamente.');

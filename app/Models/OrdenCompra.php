@@ -13,15 +13,11 @@ class OrdenCompra extends Model
     protected $primaryKey = 'ORD_ID';
     public $timestamps = true;
 
-    const CREATED_AT = 'ORD_CREATED_AT';
-    const UPDATED_AT = 'ORD_UPDATED_AT';
-
     protected $fillable = [
         'PRV_ID',
         'ORD_FECHA',
         'ORD_TOTAL',
-        'ORD_ESTADO', 
-        // 'ORD_OBSERVACION' // <--- COMENTADO PARA QUE NO FALLE
+        'ORD_ESTADO'
     ];
 
     // --- RELACIONES ---
@@ -62,13 +58,11 @@ class OrdenCompra extends Model
     public static function guardarOrden(array $datos)
     {
         return DB::transaction(function () use ($datos) {
-            // CORRECCIÓN: Eliminada la línea de observación para evitar E1/E3
             $orden = self::create([
                 'PRV_ID'     => $datos['PRV_ID'],
                 'ORD_FECHA'  => now(),
                 'ORD_TOTAL'  => 0,
-                'ORD_ESTADO' => 'P', 
-                // 'ORD_OBSERVACION' => $datos['ORD_OBSERVACION'] ?? null 
+                'ORD_ESTADO' => 'PENDIENTE', 
             ]);
 
             $totalGlobal = 0;
@@ -105,12 +99,11 @@ class OrdenCompra extends Model
     public function actualizarOrdenCompleta(array $datos)
     {
         return DB::transaction(function () use ($datos) {
-            // CORRECCIÓN: Eliminada la línea de observación aquí también
             $this->update([
-                'PRV_ID' => $datos['PRV_ID'],
-                // 'ORD_OBSERVACION' => $datos['ORD_OBSERVACION'] ?? $this->ORD_OBSERVACION
+                'PRV_ID' => $datos['PRV_ID']
             ]);
 
+            // Borrado Físico de detalles anteriores (Correcto para re-crear)
             $this->detalles()->delete();
 
             $totalGlobal = 0;
@@ -133,6 +126,7 @@ class OrdenCompra extends Model
 
     public function anular()
     {
-        $this->update(['ORD_ESTADO' => 'C']);
+        // Borrado Lógico (Cambio de Estado)
+        $this->update(['ORD_ESTADO' => 'ANULADA']);
     }
 }

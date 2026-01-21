@@ -12,7 +12,6 @@
     </div>
 @endif
 
-{{-- F2.4 Paso 7: Botón Actualizar --}}
 <form action="{{ route('ordenes.update', $orden->ORD_ID) }}" method="POST" id="formOrden">
     @csrf
     @method('PUT')
@@ -34,10 +33,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Observaciones</label>
-                    <textarea name="ORD_OBSERVACION" class="form-control" rows="1">{{ $orden->ORD_OBSERVACION }}</textarea>
-                </div>
+                {{-- ELIMINADO: OBSERVACIONES --}}
             </div>
         </div>
     </div>
@@ -48,7 +44,6 @@
             <h5 class="mb-0 text-primary"><i class="bi bi-box-seam"></i> Detalle de Productos</h5>
         </div>
         
-        {{-- F2.4 Paso 6: Modificar campos permitidos --}}
         <div class="card-body bg-light">
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
@@ -118,12 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const tablaBody = document.querySelector('#tablaDetalles tbody');
     const labelTotal = document.getElementById('totalGlobal');
     
-    // Función para dibujar filas en la tabla
     function agregarFilaVisual(proId, nombre, cantidad, precio) {
-        // Calcular subtotal de la línea
         const subtotal = parseFloat(cantidad) * parseFloat(precio);
-        
-        // Sumar al total global
         totalOrden += subtotal;
         
         const fila = `
@@ -159,26 +150,18 @@ document.addEventListener('DOMContentLoaded', function() {
         labelTotal.textContent = '$ ' + totalOrden.toFixed(2);
     }
 
-    // --- CARGAR DATOS EXISTENTES (F2.4 Paso 5) ---
-    // Recibe los datos que mandamos desde el Controlador
     const detallesExistentes = @json($orden->detalles);
     
     detallesExistentes.forEach(det => {
         let nombreProd = 'Producto Eliminado';
-        
-        // Si el controlador envió la relación 'producto', usamos el nombre real
         if(det.producto) {
             nombreProd = det.producto.PRO_NOMBRE; 
         } else {
-            // Fallback: buscamos en la lista global de productos si la relación falló
-            // (Esto soluciona el error si la relación no venía cargada)
             nombreProd = "ID: " + det.PRO_ID; 
         }
-        
         agregarFilaVisual(det.PRO_ID, nombreProd, det.DOR_CANTIDAD, det.DOR_PRECIO);
     });
 
-    // --- EVENTOS PARA AGREGAR NUEVOS ---
     document.getElementById('btnAgregar').addEventListener('click', function() {
         const sel = document.getElementById('select_producto');
         const cant = document.getElementById('input_cantidad').value;
@@ -188,7 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const nombre = sel.options[sel.selectedIndex].text;
             agregarFilaVisual(sel.value, nombre, cant, prec);
             
-            // Limpiar inputs
             sel.value = ''; 
             document.getElementById('input_cantidad').value = 1; 
             document.getElementById('input_precio').value = '';
@@ -197,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Auto-rellenar precio al seleccionar producto
     document.getElementById('select_producto').addEventListener('change', function() {
         const op = this.options[this.selectedIndex];
         if(op.dataset.precio) {
@@ -205,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Función global para eliminar
     window.eliminarFila = function(id, sub) {
         document.getElementById('fila-'+id).remove();
         totalOrden -= sub;

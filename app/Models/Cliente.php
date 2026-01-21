@@ -15,10 +15,7 @@ class Cliente extends Authenticatable
 
     protected $table = 'CLIENTE';
     protected $primaryKey = 'CLI_ID';
-    public $timestamps = false;
-
-    const CREATED_AT = 'CLI_CREATED_AT';
-    const UPDATED_AT = 'CLI_UPDATED_AT';
+    public $timestamps = true;
 
     protected $fillable = [
         'CLI_NOMBRES',
@@ -33,7 +30,7 @@ class Cliente extends Authenticatable
 
     protected $hidden = [
         'CLI_PASSWORD',
-        'remember_token',
+        // Se eliminó remember_token
     ];
 
     /**
@@ -45,7 +42,6 @@ class Cliente extends Authenticatable
     }
 
     /**
-     * 🔴 CLAVE ABSOLUTA
      * Laravel: decirle cuál es el nombre REAL del campo password
      */
     public function getAuthPasswordName()
@@ -54,7 +50,7 @@ class Cliente extends Authenticatable
     }
 
     /* =========================================================
-       TUS MÉTODOS DE LÓGICA DE NEGOCIO (SIN CAMBIOS)
+       MÉTODOS DE LÓGICA DE NEGOCIO
        ========================================================= */
 
     public static function validar(array $datos, $id = null)
@@ -83,12 +79,14 @@ class Cliente extends Authenticatable
     public static function guardarCliente(array $datos)
     {
         $datos['CLI_PASSWORD'] = Hash::make($datos['CLI_PASSWORD']);
+        // El estado se guardará como 'ACTIVO' por defecto desde la BDD si no se envía
         return self::create($datos);
     }
 
     public static function obtenerClientes()
     {
-        return self::where('CLI_ESTADO', 1)->get();
+        // CORREGIDO: Filtra por el string 'ACTIVO'
+        return self::where('CLI_ESTADO', 'ACTIVO')->get();
     }
 
     public static function buscarCliente($criterio)
@@ -111,7 +109,8 @@ class Cliente extends Authenticatable
 
     public function desactivarCliente()
     {
-        $this->CLI_ESTADO = 0;
+        // CORREGIDO: Actualiza a 'INACTIVO'
+        $this->CLI_ESTADO = 'INACTIVO';
         $this->save();
     }
 }

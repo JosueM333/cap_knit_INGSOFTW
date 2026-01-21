@@ -8,41 +8,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Tabla Cabecera (Orden de Compra)
+        // 1. Tabla Cabecera (Orden de Compra)
         Schema::create('ORDEN_COMPRA', function (Blueprint $table) {
-            $table->id('ORD_ID'); // Identificador
+            $table->id('ORD_ID'); 
             
-            // Relación con Proveedor (Clave Foránea para integridad E3)
-            $table->unsignedBigInteger('PRV_ID');
-            $table->foreign('PRV_ID')->references('PRV_ID')->on('PROVEEDOR');
+            // Relación con Proveedor
+            $table->foreignId('PRV_ID')->constrained('PROVEEDOR', 'PRV_ID')->onDelete('cascade');
 
             $table->dateTime('ORD_FECHA');
             $table->decimal('ORD_TOTAL', 10, 2)->default(0);
-            $table->char('ORD_ESTADO', 1)->default('A'); // A: Activa/Pendiente
+            
+            // Estado descriptivo
+            $table->string('ORD_ESTADO')->default('PENDIENTE'); 
 
-            // Timestamps personalizados
-            $table->timestamp('ORD_CREATED_AT')->nullable();
-            $table->timestamp('ORD_UPDATED_AT')->nullable();
+            $table->timestamps(); // created_at, updated_at
         });
 
-        // Tabla Detalle (Productos dentro de la orden)
+        // 2. Tabla Detalle (Productos dentro de la orden)
         Schema::create('DETALLE_ORDEN', function (Blueprint $table) {
             $table->id('DOR_ID');
 
-            // Relación con la Cabecera (Si borras la orden, se borran sus detalles)
-            $table->unsignedBigInteger('ORD_ID');
-            $table->foreign('ORD_ID')->references('ORD_ID')->on('ORDEN_COMPRA')->onDelete('cascade');
+            // Relación con Cabecera
+            $table->foreignId('ORD_ID')->constrained('ORDEN_COMPRA', 'ORD_ID')->onDelete('cascade');
 
             // Relación con Producto
-            $table->unsignedBigInteger('PRO_ID');
-            $table->foreign('PRO_ID')->references('PRO_ID')->on('PRODUCTO');
+            $table->foreignId('PRO_ID')->constrained('PRODUCTO', 'PRO_ID')->onDelete('cascade');
 
             $table->integer('DOR_CANTIDAD');
-            $table->decimal('DOR_PRECIO', 10, 2); // Precio pactado en ese momento
+            $table->decimal('DOR_PRECIO', 10, 2);
             $table->decimal('DOR_SUBTOTAL', 10, 2);
 
-            $table->timestamp('DOR_CREATED_AT')->nullable();
-            $table->timestamp('DOR_UPDATED_AT')->nullable();
+            $table->timestamps();
         });
     }
 

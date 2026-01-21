@@ -2,30 +2,31 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-md-10">
+    <div class="col-md-8"> {{-- Ancho ajustado para consistencia con Cliente --}}
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
                 <h4 class="mb-0 h5">Registrar Nuevo Proveedor</h4>
             </div>
             <div class="card-body p-4">
-                
-                 @if ($errors->any())
+
+                @if ($errors->any())
                     <div class="alert alert-danger">
-                        Datos incorrectos o incompletos
+                        Datos incorrectos o incompletos.
                     </div>
                 @endif
+
                 <form action="{{ route('proveedores.store') }}" method="POST">
                     @csrf
 
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">RUC (13 dígitos) *</label>
                             <input type="text" name="PRV_RUC" class="form-control @error('PRV_RUC') is-invalid @enderror" value="{{ old('PRV_RUC') }}" maxlength="13" required>
                             @error('PRV_RUC') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-8">
-                            <label class="form-label">Razón Social / Nombre *</label>
+                        <div class="col-md-6">
+                            <label class="form-label">Razón Social *</label>
                             <input type="text" name="PRV_NOMBRE" class="form-control @error('PRV_NOMBRE') is-invalid @enderror" value="{{ old('PRV_NOMBRE') }}" required>
                             @error('PRV_NOMBRE') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -48,9 +49,10 @@
                             @error('PRV_DIRECCION') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Persona de Contacto</label>
-                            <input type="text" name="PRV_PERSONA_CONTACTO" class="form-control" value="{{ old('PRV_PERSONA_CONTACTO') }}">
+                        <div class="col-12">
+                            <label class="form-label">Persona de Contacto <span class="text-muted small">(Opcional)</span></label>
+                            <input type="text" name="PRV_PERSONA_CONTACTO" class="form-control @error('PRV_PERSONA_CONTACTO') is-invalid @enderror" value="{{ old('PRV_PERSONA_CONTACTO') }}">
+                            @error('PRV_PERSONA_CONTACTO') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 

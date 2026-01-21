@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="mb-4 border-bottom pb-2 d-flex justify-content-between align-items-center">
-    <h1 class="h3 text-uppercase">Detalle de Orden #{{ $orden->ORD_NUMERO ?? $orden->ORD_ID }}</h1>
+    <h1 class="h3 text-uppercase">Detalle de Orden #{{ $orden->ORD_ID }}</h1>
     <a href="{{ route('ordenes.index') }}" class="btn btn-outline-dark btn-sm">
         <i class="bi bi-arrow-left me-1"></i> Volver al Listado
     </a>
@@ -11,7 +11,6 @@
 
 <div class="row g-4">
     
-    {{-- COLUMNA IZQUIERDA: INFORMACIÓN DE CABECERA --}}
     <div class="col-md-4">
         <div class="card shadow-sm border-0 mb-3">
             <div class="card-header bg-light fw-bold">
@@ -26,24 +25,18 @@
                 </div>
                 <div class="list-group-item">
                     <small class="text-muted d-block">Estado</small>
-                    @if($orden->ORD_ESTADO == 'A')
-                        <span class="badge bg-success w-100 py-2">ACTIVA</span>
-                    @elseif($orden->ORD_ESTADO == 'P')
+                    @if($orden->ORD_ESTADO == 'PENDIENTE')
                         <span class="badge bg-warning text-dark w-100 py-2">PENDIENTE</span>
+                    @elseif($orden->ORD_ESTADO == 'ANULADA')
+                        <span class="badge bg-danger w-100 py-2">ANULADA</span>
                     @else
-                        <span class="badge bg-secondary w-100 py-2">CANCELADA</span>
+                        <span class="badge bg-secondary w-100 py-2">{{ $orden->ORD_ESTADO }}</span>
                     @endif
                 </div>
                 <div class="list-group-item">
                     <small class="text-muted d-block">Total Global</small>
                     <span class="text-primary fw-bold fs-4">$ {{ number_format($orden->ORD_TOTAL, 2) }}</span>
                 </div>
-                @if($orden->ORD_OBSERVACION)
-                <div class="list-group-item bg-light">
-                    <small class="text-muted d-block">Observaciones</small>
-                    <p class="mb-0 small fst-italic">{{ $orden->ORD_OBSERVACION }}</p>
-                </div>
-                @endif
             </div>
         </div>
 
@@ -60,7 +53,6 @@
         </div>
     </div>
 
-    {{-- COLUMNA DERECHA: TABLA DE PRODUCTOS (DETALLES) --}}
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">

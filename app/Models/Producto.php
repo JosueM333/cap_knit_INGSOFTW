@@ -16,9 +16,6 @@ class Producto extends Model
     protected $primaryKey = 'PRO_ID';
     public $timestamps = true;
 
-    const CREATED_AT = 'PRO_CREATED_AT';
-    const UPDATED_AT = 'PRO_UPDATED_AT';
-
     protected $fillable = [
         'PRV_ID',
         'PRO_CODIGO',
@@ -27,12 +24,14 @@ class Producto extends Model
         'PRO_PRECIO',
         'PRO_COLOR',
         'PRO_TALLA',
-        'PRO_MARCA',
-        'PRO_ESTADO',
-        'PRO_VISIBLE'
+        'PRO_MARCA'
+        // ELIMINADOS: PRO_ESTADO, PRO_VISIBLE
     ];
 
-  
+    /* =========================================================
+       RELACIONES
+       ========================================================= */
+
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class, 'PRV_ID', 'PRV_ID');
@@ -41,12 +40,14 @@ class Producto extends Model
     public function bodegas()
     {
         return $this->belongsToMany(Bodega::class, 'BODEGA_PRODUCTO', 'PRO_ID', 'BOD_ID')
-                    ->withPivot('BP_STOCK', 'BP_STOCK_MIN');
+                    ->withPivot('BP_STOCK', 'BP_STOCK_MIN')
+                    ->withTimestamps(); // Maneja automáticamente los timestamps de la pivote
     }
 
-    
-   
-     
+    /* =========================================================
+       LÓGICA DE NEGOCIO
+       ========================================================= */
+
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -57,29 +58,14 @@ class Producto extends Model
             'PRO_PRECIO'      => 'required|numeric|min:0.01',
             'PRO_MARCA'       => 'nullable|string|max:50',
             'PRO_COLOR'       => 'nullable|string|max:30',
+            // Agregado para consistencia (estaba en fillable pero no validado)
+            'PRO_TALLA'       => 'nullable|string|max:10',
         ];
 
-        
         $mensajes = [
-            'PRV_ID.required' => 'Datos de producto inconsistentes',
-            'PRV_ID.exists'   => 'Datos de producto inconsistentes',
-
-            'PRO_CODIGO.required' => 'Datos de producto inconsistentes',
-            'PRO_CODIGO.unique'   => 'Datos de producto inconsistentes',
-            'PRO_CODIGO.max'      => 'Datos de producto inconsistentes',
-
-            'PRO_NOMBRE.required' => 'Datos de producto inconsistentes',
-            'PRO_NOMBRE.max'      => 'Datos de producto inconsistentes',
-
-            'PRO_DESCRIPCION.required' => 'Datos de producto inconsistentes',
-            'PRO_DESCRIPCION.max'      => 'Datos de producto inconsistentes',
-
-            'PRO_PRECIO.required' => 'Precio inválido',
-            'PRO_PRECIO.numeric'  => 'Precio inválido',
-            'PRO_PRECIO.min'      => 'Precio inválido',
-
-            'PRO_MARCA.max' => 'Datos de producto inconsistentes',
-            'PRO_COLOR.max' => 'Datos de producto inconsistentes',
+            'PRV_ID.required' => 'Debe seleccionar un proveedor',
+            'PRO_CODIGO.unique' => 'El código del producto ya existe',
+            'PRO_PRECIO.min' => 'El precio debe ser mayor a 0',
         ];
 
         $validator = Validator::make($datos, $reglas, $mensajes);
@@ -89,14 +75,12 @@ class Producto extends Model
         }
     }
 
-    
-
-   
     public static function guardarProducto(array $datos)
     {
         return DB::transaction(function () use ($datos) {
             $producto = self::create($datos);
 
+            // Asignar a la primera bodega por defecto con stock 0
             $bodegaDefecto = Bodega::first();
             
             if ($bodegaDefecto) {
@@ -110,17 +94,11 @@ class Producto extends Model
         });
     }
 
-    
-
-     
     public static function obtenerProductos()
     {
         return self::with('proveedor')->get();
     }
 
-    
-
-     
     public static function buscarProducto($criterio)
     {
         return self::with('proveedor')
@@ -129,27 +107,19 @@ class Producto extends Model
                    ->get();
     }
 
-    
-
-     
     public static function obtenerProducto($id)
     {
         return self::findOrFail($id);
     }
 
-    
-
-     
     public function actualizarProducto(array $datos)
     {
         $this->update($datos);
     }
 
-    
-    
-     
     public function eliminarProducto()
     {
+        // Borrado Físico
         $this->delete();
     }
 }

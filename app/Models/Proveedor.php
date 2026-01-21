@@ -15,21 +15,20 @@ class Proveedor extends Model
     protected $primaryKey = 'PRV_ID';
     public $timestamps = true;
 
-    const CREATED_AT = 'PRV_CREATED_AT';
-    const UPDATED_AT = 'PRV_UPDATED_AT';
-
     protected $fillable = [
         'PRV_RUC',
         'PRV_NOMBRE',
         'PRV_TELEFONO',
         'PRV_EMAIL',
         'PRV_DIRECCION',
-        'PRV_PERSONA_CONTACTO',
-        'PRV_ESTADO'
+        'PRV_PERSONA_CONTACTO'
+        // ELIMINADO: PRV_ESTADO
     ];
 
+    /* =========================================================
+       MÉTODOS DE LÓGICA DE NEGOCIO
+       ========================================================= */
 
-     
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -41,26 +40,11 @@ class Proveedor extends Model
             'PRV_PERSONA_CONTACTO' => 'nullable|string|max:80',
         ];
 
-         
         $mensajes = [
             'PRV_RUC.required' => 'El RUC del proveedor es obligatorio',
             'PRV_RUC.size'     => 'El RUC debe tener 13 dígitos',
-            'PRV_RUC.unique'   => 'Proveedor ya registrado',
-
-            'PRV_NOMBRE.required' => 'El nombre del proveedor es obligatorio',
-            'PRV_NOMBRE.max'      => 'El nombre del proveedor no puede exceder los 100 caracteres',
-
-            'PRV_TELEFONO.required' => 'El teléfono del proveedor es obligatorio',
-            'PRV_TELEFONO.max'      => 'El teléfono no puede exceder los 15 caracteres',
-
-            'PRV_EMAIL.required' => 'El correo electrónico es obligatorio',
-            'PRV_EMAIL.email'    => 'El correo electrónico no tiene un formato válido',
-            'PRV_EMAIL.max'      => 'El correo electrónico no puede exceder los 80 caracteres',
-
-            'PRV_DIRECCION.required' => 'La dirección del proveedor es obligatoria',
-            'PRV_DIRECCION.max'      => 'La dirección no puede exceder los 100 caracteres',
-
-            'PRV_PERSONA_CONTACTO.max' => 'El nombre de la persona de contacto no puede exceder los 80 caracteres',
+            'PRV_RUC.unique'   => 'Este RUC ya está registrado',
+            'PRV_EMAIL.email'  => 'El formato del correo no es válido',
         ];
 
         $validator = Validator::make($datos, $reglas, $mensajes);
@@ -70,25 +54,16 @@ class Proveedor extends Model
         }
     }
 
-    
-    
-     
     public static function guardarProveedor(array $datos)
     {
         return self::create($datos);
     }
 
-    
-    
-     
     public static function obtenerProveedores()
     {
         return self::all();
     }
 
-    
-    
-    
     public static function buscarProveedor($criterio)
     {
         return self::where('PRV_RUC', 'LIKE', "%$criterio%")
@@ -96,26 +71,19 @@ class Proveedor extends Model
                    ->get();
     }
 
-    
-  
-     
     public static function obtenerProveedor($id)
     {
         return self::findOrFail($id);
     }
 
-    
-    
-   
     public function actualizarProveedor(array $datos)
     {
         $this->update($datos);
     }
 
-  
-    
     public function eliminarProveedor()
     {
+        // Lógica de Borrado Físico
         $this->delete();
     }
 }

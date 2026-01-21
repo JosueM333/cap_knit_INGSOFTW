@@ -6,7 +6,7 @@
     <h1 class="h3 text-uppercase">Gestión de Carritos</h1>
 </div>
 
-{{-- BLOQUE DE MENSAJES (Aquí saldrá el error si la cédula no existe) --}}
+{{-- BLOQUE DE MENSAJES --}}
 @if(session('error'))
     <div class="alert alert-danger">
         <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
@@ -50,7 +50,7 @@
     </div>
 </div>
 
-{{-- RESULTADOS (Solo visible si hay datos) --}}
+{{-- RESULTADOS --}}
 @if(isset($carritosActivos))
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white">
@@ -94,7 +94,7 @@
                                 @method('DELETE')
                                 <button type="submit" 
                                         class="btn btn-sm btn-outline-danger" 
-                                        onclick="return confirm('¿Está seguro de vaciar este carrito?')">
+                                        onclick="return confirm('ATENCIÓN: Esto eliminará permanentemente todos los productos de este carrito. ¿Desea continuar?')">
                                     Vaciar
                                 </button>
                             </form>
@@ -104,7 +104,7 @@
                 @empty
                 <tr>
                     <td colspan="5" class="text-center py-5">
-                        <h5 class="text-muted">No hay carritos de compra activos.</h5>
+                        <h5 class="text-muted">No se encontraron carritos activos.</h5>
                     </td>
                 </tr>
                 @endforelse

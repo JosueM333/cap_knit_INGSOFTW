@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    {{-- CASO F5.3: BUSCADOR --}}
+    {{-- BUSCADOR --}}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white border-bottom-0 pt-4 px-4">
             <h5 class="fw-bold text-primary"><i class="bi bi-search me-2"></i>Buscar Comprobante</h5>
@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    {{-- ZONA DE ACCIÓN PRINCIPAL (F5.1) --}}
+    {{-- ZONA DE ACCIÓN PRINCIPAL --}}
     <div class="card shadow-sm border-0 mb-4 bg-light">
         <div class="card-body p-4 text-center border rounded d-flex justify-content-between align-items-center">
             <div class="text-start">
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    {{-- CASO F5.2: TABLA DE RESULTADOS --}}
+    {{-- TABLA DE RESULTADOS --}}
     <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Historial de Facturas Emitidas</h5>
@@ -80,8 +80,11 @@
                         @forelse($comprobantes as $comp)
                         <tr>
                             <td class="ps-4 fw-bold">#{{ str_pad($comp->COM_ID, 6, '0', STR_PAD_LEFT) }}</td>
-                            <td>{{ $comp->COM_FECHA }}</td>
-                            <td>{{ $comp->cliente->CLI_NOMBRES }} {{ $comp->cliente->CLI_APELLIDOS }}<br><small class="text-muted">ID: {{ $comp->cliente->CLI_CEDULA }}</small></td>
+                            <td>{{ \Carbon\Carbon::parse($comp->COM_FECHA)->format('d/m/Y') }}</td>
+                            <td>
+                                {{ $comp->cliente->CLI_NOMBRES }} {{ $comp->cliente->CLI_APELLIDOS }}
+                                <br><small class="text-muted">ID: {{ $comp->cliente->CLI_CEDULA }}</small>
+                            </td>
                             <td class="fw-bold">${{ number_format($comp->COM_TOTAL, 2) }}</td>
                             <td>
                                 @if($comp->COM_ESTADO == 'ANULADO')
@@ -91,25 +94,21 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                {{-- 
-                                   AQUÍ ESTÁ EL CAMBIO SOLICITADO:
-                                   Botones explícitos con texto "Ver", "Editar", "Anular"
-                                --}}
                                 <div class="d-flex gap-2 justify-content-end">
-                                    {{-- Ver Detalle --}}
+                                    {{-- Ver --}}
                                     <a href="{{ route('comprobantes.show', $comp->COM_ID) }}" class="btn btn-sm btn-dark fw-bold">
                                         Ver
                                     </a>
 
                                     @if($comp->COM_ESTADO != 'ANULADO')
-                                        {{-- F5.4: Botón "Editar" --}}
+                                        {{-- Editar --}}
                                         <a href="{{ route('comprobantes.edit', $comp->COM_ID) }}" class="btn btn-sm btn-primary fw-bold">
                                             Editar
                                         </a>
 
-                                        {{-- F5.5: Botón "Anular" --}}
+                                        {{-- Anular (Modal) --}}
                                         <button type="button" class="btn btn-sm btn-danger fw-bold" 
-                                                onclick="abrirModalAnulacion({{ $comp->COM_ID }}, '{{ str_pad($comp->COM_ID, 6, '0', STR_PAD_LEFT) }}')">
+                                                onclick="abrirModalAnulacion('{{ route('comprobantes.anular', $comp->COM_ID) }}', '{{ str_pad($comp->COM_ID, 6, '0', STR_PAD_LEFT) }}')">
                                             Anular
                                         </button>
                                     @endif
@@ -126,7 +125,7 @@
     </div>
 </div>
 
-{{-- MODAL F5.5: Confirmación de Anulación --}}
+{{-- MODAL DE ANULACIÓN --}}
 <div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content border-danger">
@@ -141,16 +140,13 @@
                     <p>Está a punto de anular el Comprobante Nro: <strong id="modal_nro_factura"></strong>.</p>
                     <p class="text-danger small">Esta acción es irreversible (Borrado Lógico).</p>
                     
-                    {{-- F5.5 Paso 6: Solicita Motivo --}}
                     <div class="mb-3">
                         <label for="motivo_anulacion" class="form-label fw-bold">Motivo de la anulación:</label>
                         <textarea class="form-control" name="motivo_anulacion" rows="3" required placeholder="Ej: Error en datos del cliente, Devolución total..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
-                    {{-- F5.5 Flujo Alterno: Cancelar --}}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    {{-- F5.5 Paso 7: Confirmar --}}
                     <button type="submit" class="btn btn-danger fw-bold">Confirmar Anulación</button>
                 </div>
             </form>
@@ -159,15 +155,12 @@
 </div>
 
 <script>
-    function abrirModalAnulacion(id, nroFactura) {
-        // Configura la ruta del formulario dinámicamente
-        var form = document.getElementById('formAnular');
-        form.action = '/comprobantes/' + id + '/anular';
-        
-        // Muestra el número en el texto
+    function abrirModalAnulacion(urlAccion, nroFactura) {
+        // Asignar la ruta generada por Blade al formulario
+        document.getElementById('formAnular').action = urlAccion;
+        // Mostrar número visual
         document.getElementById('modal_nro_factura').textContent = '#' + nroFactura;
-        
-        // Abre el modal
+        // Abrir modal
         var myModal = new bootstrap.Modal(document.getElementById('modalAnular'));
         myModal.show();
     }

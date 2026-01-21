@@ -8,28 +8,23 @@ use Illuminate\Validation\ValidationException;
 
 class ProveedorController extends Controller
 {
-
     public function index(Request $request)
     {
         $criterio = $request->input('search');
 
         if ($criterio) {
-            
             $proveedores = Proveedor::buscarProveedor($criterio);
         } else {
-       
             $proveedores = Proveedor::obtenerProveedores();
         }
 
         return view('proveedores.index', compact('proveedores'));
     }
 
-
     public function create()
     {
         return view('proveedores.create');
     }
-
 
     public function store(Request $request)
     {
@@ -47,15 +42,12 @@ class ProveedorController extends Controller
         }
     }
 
-
     public function edit($id)
     {
-       
         $proveedor = Proveedor::obtenerProveedor($id);
         return view('proveedores.edit', compact('proveedor'));
     }
 
- 
     public function update(Request $request, $id)
     {
         try {
@@ -73,14 +65,14 @@ class ProveedorController extends Controller
         }
     }
 
-  
     public function destroy($id)
     {
         $proveedor = Proveedor::obtenerProveedor($id);
         
+        // Ejecuta el borrado físico
         $proveedor->eliminarProveedor();
 
         return redirect()->route('proveedores.index')
-                         ->with('success', 'Proveedor eliminado físicamente del sistema.');
+                         ->with('success', 'Proveedor eliminado permanentemente.');
     }
 }

@@ -14,7 +14,7 @@
 
                  @if ($errors->any())
                     <div class="alert alert-danger">
-                        Datos incorrectos o incompletos
+                        Datos incorrectos o incompletos.
                     </div>
                 @endif
 
@@ -23,7 +23,8 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Código SKU *</label>
+                            <label class="form-label">Código del Producto*</label>
+                            
                             <input type="text" name="PRO_CODIGO" class="form-control @error('PRO_CODIGO') is-invalid @enderror" value="{{ old('PRO_CODIGO') }}" required>
                             @error('PRO_CODIGO') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -53,20 +54,26 @@
                             @error('PRO_DESCRIPCION') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-4">
+                        {{-- Fila de atributos secundarios --}}
+                        <div class="col-md-3">
                             <label class="form-label">Precio ($) *</label>
                             <input type="number" step="0.01" name="PRO_PRECIO" class="form-control @error('PRO_PRECIO') is-invalid @enderror" value="{{ old('PRO_PRECIO') }}" required>
                             @error('PRO_PRECIO') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Marca</label>
-                            <input type="text" name="PRO_MARCA" class="form-control" value="{{ old('PRO_MARCA') }}">
+                            <input type="text" name="PRO_MARCA" class="form-control @error('PRO_MARCA') is-invalid @enderror" value="{{ old('PRO_MARCA') }}">
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Color</label>
-                            <input type="text" name="PRO_COLOR" class="form-control" value="{{ old('PRO_COLOR') }}">
+                            <input type="text" name="PRO_COLOR" class="form-control @error('PRO_COLOR') is-invalid @enderror" value="{{ old('PRO_COLOR') }}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Talla</label>
+                            <input type="text" name="PRO_TALLA" class="form-control @error('PRO_TALLA') is-invalid @enderror" value="{{ old('PRO_TALLA') }}" placeholder="Ej: M, 40, XL">
                         </div>
                     </div>
 

@@ -13,27 +13,22 @@ return new class extends Migration
             $table->id('COM_ID');
 
             // Claves Foráneas
-            // CRD_ID es unique para evitar doble facturación (Paso 10 / Excepción E3)
-            $table->unsignedBigInteger('CRD_ID')->unique(); 
-            $table->unsignedBigInteger('CLI_ID');
+            // CRD_ID es unique para asegurar una sola factura por carrito
+            $table->foreignId('CRD_ID')->unique()->constrained('CARRITO', 'CRD_ID');
+            $table->foreignId('CLI_ID')->constrained('CLIENTE', 'CLI_ID');
 
             // Datos del Comprobante
-            $table->dateTime('COM_FECHA'); // Paso 7
+            $table->dateTime('COM_FECHA');
             $table->decimal('COM_SUBTOTAL', 10, 2);
-            $table->decimal('COM_IVA', 10, 2); // Para guardar el cálculo del 15%
+            $table->decimal('COM_IVA', 10, 2); 
             $table->decimal('COM_TOTAL', 10, 2);
             
-            $table->string('COM_OBSERVACIONES', 255)->nullable(); // Paso 8
+            // Observaciones y Estado
+            $table->string('COM_OBSERVACIONES', 255)->nullable();
             $table->string('COM_ESTADO', 20)->default('EMITIDO');
 
-            // Timestamps personalizados
-            $table->timestamp('COM_CREATED_AT')->useCurrent();
-            $table->timestamp('COM_UPDATED_AT')->useCurrent()->useCurrentOnUpdate();
-
-            // Restricciones de Clave Foránea
-            // Asumiendo que tus tablas se llaman CARRITO y CLIENTE
-            $table->foreign('CRD_ID')->references('CRD_ID')->on('CARRITO');
-            $table->foreign('CLI_ID')->references('CLI_ID')->on('CLIENTE');
+            // Timestamps estándar (created_at, updated_at)
+            $table->timestamps();
         });
     }
 

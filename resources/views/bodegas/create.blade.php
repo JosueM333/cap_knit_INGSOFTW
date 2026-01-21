@@ -11,7 +11,7 @@
 
                 @if ($errors->any())
                     <div class="alert alert-danger">
-                        Datos incorrectos o incompletos
+                        Datos incorrectos o incompletos.
                     </div>
                 @endif
                 
@@ -31,7 +31,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Descripción (Opcional)</label>
+                        <label class="form-label">Descripción <span class="text-muted small">(Opcional)</span></label>
                         <textarea name="BOD_DESCRIPCION" class="form-control @error('BOD_DESCRIPCION') is-invalid @enderror" rows="3">{{ old('BOD_DESCRIPCION') }}</textarea>
                         @error('BOD_DESCRIPCION') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

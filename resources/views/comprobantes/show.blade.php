@@ -3,9 +3,8 @@
 @section('content')
 <div class="container py-5">
     
-    {{-- Botones de Navegación --}}
     <div class="d-flex justify-content-between mb-4 no-print">
-        <a href="{{ route('comprobantes.create') }}" class="btn btn-outline-dark">
+        <a href="{{ route('comprobantes.index') }}" class="btn btn-outline-dark">
             <i class="bi bi-arrow-left"></i> Volver a Gestión
         </a>
         <button onclick="window.print()" class="btn btn-primary fw-bold">
@@ -17,10 +16,8 @@
         <div class="alert alert-success no-print">{{ session('success') }}</div>
     @endif
 
-    {{-- Diseño de la Factura --}}
     <div class="card border-dark shadow-sm p-4" id="invoice">
         
-        {{-- Cabecera --}}
         <div class="row mb-4 border-bottom pb-3">
             <div class="col-8">
                 <h2 class="fw-bold text-uppercase">Mi Tienda de Gorras</h2>
@@ -31,12 +28,17 @@
             <div class="col-4 text-end">
                 <h4 class="text-primary fw-bold">FACTURA</h4>
                 <h5 class="text-muted">No. {{ str_pad($comprobante->COM_ID, 6, '0', STR_PAD_LEFT) }}</h5>
-                <p class="mb-0"><strong>Fecha:</strong> {{ $comprobante->COM_FECHA }}</p>
-                <p><strong>Estado:</strong> <span class="badge bg-success">{{ $comprobante->COM_ESTADO }}</span></p>
+                <p class="mb-0"><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($comprobante->COM_FECHA)->format('d/m/Y') }}</p>
+                <p><strong>Estado:</strong> 
+                    @if($comprobante->COM_ESTADO == 'ANULADO')
+                        <span class="badge bg-danger">ANULADO</span>
+                    @else
+                        <span class="badge bg-success">{{ $comprobante->COM_ESTADO }}</span>
+                    @endif
+                </p>
             </div>
         </div>
 
-        {{-- Datos del Cliente --}}
         <div class="row mb-4">
             <div class="col-12">
                 <h5 class="fw-bold bg-light p-2 border">Datos del Cliente</h5>
@@ -49,7 +51,6 @@
             </div>
         </div>
 
-        {{-- Tabla de Detalles --}}
         <div class="table-responsive mb-4">
             <table class="table table-bordered border-dark">
                 <thead class="bg-dark text-white text-center">
@@ -76,7 +77,6 @@
             </table>
         </div>
 
-        {{-- Totales --}}
         <div class="row">
             <div class="col-7">
                 <div class="p-3 bg-light border rounded">
@@ -108,7 +108,6 @@
     </div>
 </div>
 
-{{-- Estilos para impresión --}}
 <style>
     @media print {
         .no-print { display: none !important; }

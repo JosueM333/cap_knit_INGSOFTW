@@ -9,27 +9,23 @@ use Illuminate\Validation\ValidationException;
 
 class ProductoController extends Controller
 {
-
     public function index(Request $request)
     {
         $criterio = $request->input('search');
 
         if ($criterio) {
-            
             $productos = Producto::buscarProducto($criterio);
         } else {
-            
             $productos = Producto::obtenerProductos();
         }
 
         return view('productos.index', compact('productos'));
     }
 
-    
     public function create()
     {
-        
-        $proveedores = Proveedor::where('PRV_ESTADO', 1)->get();
+        // CORRECCIÓN: Traer todos los proveedores (ya no existe PRV_ESTADO)
+        $proveedores = Proveedor::all();
         return view('productos.create', compact('proveedores'));
     }
 
@@ -39,7 +35,6 @@ class ProductoController extends Controller
             $datos = $request->all();
 
             Producto::validar($datos);
-            
             Producto::guardarProducto($datos);
 
             return redirect()->route('productos.index')
@@ -50,16 +45,15 @@ class ProductoController extends Controller
         }
     }
 
-    
     public function edit($id)
     {
-        
         $producto = Producto::obtenerProducto($id);
-        $proveedores = Proveedor::where('PRV_ESTADO', 1)->get();
+        
+        // CORRECCIÓN: Traer todos los proveedores
+        $proveedores = Proveedor::all();
         
         return view('productos.edit', compact('producto', 'proveedores'));
     }
-
 
     public function update(Request $request, $id)
     {
@@ -78,16 +72,14 @@ class ProductoController extends Controller
         }
     }
 
-   
-
-    
     public function destroy($id)
     {
         $producto = Producto::obtenerProducto($id);
         
+        // Borrado Físico
         $producto->eliminarProducto();
 
         return redirect()->route('productos.index')
-                         ->with('success', 'Producto eliminado del catálogo.');
+                         ->with('success', 'Producto eliminado del catálogo permanentemente.');
     }
 }

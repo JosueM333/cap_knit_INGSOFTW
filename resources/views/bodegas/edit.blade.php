@@ -11,7 +11,7 @@
 
                 @if ($errors->any())
                     <div class="alert alert-danger">
-                        Datos incorrectos o incompletos
+                        Datos incorrectos o incompletos.
                     </div>
                 @endif
                 

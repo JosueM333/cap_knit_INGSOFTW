@@ -17,7 +17,6 @@
                 </div>
                 <div class="card-body p-4">
                     
-                    {{-- Mensajes de error --}}
                     @if($errors->any())
                         <div class="alert alert-danger">
                             <ul class="mb-0">
@@ -30,7 +29,6 @@
                         @csrf
                         @method('PUT')
 
-                        {{-- F5.4 Paso 6: Campos Fiscales Bloqueados --}}
                         <div class="alert alert-warning small border-warning text-dark">
                             <i class="bi bi-lock-fill me-1"></i> 
                             <strong>Nota:</strong> Los campos fiscales y financieros están bloqueados por seguridad.
@@ -50,7 +48,7 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Fecha Emisión</label>
-                                <input type="text" class="form-control bg-light" value="{{ $comprobante->COM_FECHA }}" readonly disabled>
+                                <input type="text" class="form-control bg-light" value="{{ \Carbon\Carbon::parse($comprobante->COM_FECHA)->format('d/m/Y') }}" readonly disabled>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">IVA (15%)</label>
@@ -64,15 +62,13 @@
 
                         <hr>
 
-                        {{-- F5.4 Paso 7: Campos no fiscales (Editables) --}}
                         <div class="mb-4">
                             <label for="observaciones" class="form-label fw-bold">Observaciones (Editable)</label>
-                            <textarea class="form-control border-primary" name="observaciones" id="observaciones" rows="3" placeholder="Añada notas adicionales aquí...">{{ old('observaciones', $comprobante->COM_OBSERVACIONES) }}</textarea>
+                            <textarea class="form-control border-primary" name="observaciones" id="observaciones" rows="3">{{ old('observaciones', $comprobante->COM_OBSERVACIONES) }}</textarea>
                             <div class="form-text">Puede modificar detalles de entrega o notas internas.</div>
                         </div>
 
                         <div class="d-grid gap-2">
-                            {{-- F5.4 Paso 8: Botón Actualizar --}}
                             <button type="submit" class="btn btn-primary btn-lg fw-bold">
                                 <i class="bi bi-save me-2"></i> Actualizar Comprobante
                             </button>

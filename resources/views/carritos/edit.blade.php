@@ -25,12 +25,14 @@
                 </form>
 
                 @if(isset($productos))
-                <ul class="list-group list-group-flush">
+                <ul class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
                     @forelse($productos as $prod)
                     <li class="list-group-item d-flex justify-content-between align-items-center p-2">
                         <div style="line-height: 1.2;">
                             <small class="fw-bold">{{ $prod->PRO_NOMBRE }}</small><br>
-                            <small class="text-muted">${{ number_format($prod->PRO_PRECIO, 2) }}</small>
+                            <small class="text-muted" style="font-size: 0.8rem;">
+                                {{ $prod->PRO_MARCA ?? 'Genérico' }} - ${{ number_format($prod->PRO_PRECIO, 2) }}
+                            </small>
                         </div>
                         <form action="{{ route('carritos.agregar_producto', $carrito->CRD_ID) }}" method="POST">
                             @csrf
@@ -42,7 +44,7 @@
                         </form>
                     </li>
                     @empty
-                    <li class="list-group-item text-muted">Producto no encontrado.</li>
+                    <li class="list-group-item text-center text-muted py-3">Producto no encontrado.</li>
                     @endforelse
                 </ul>
                 @endif
@@ -70,7 +72,12 @@
                     <tbody>
                         @forelse($carrito->detalles as $detalle)
                         <tr>
-                            <td>{{ $detalle->producto->PRO_NOMBRE }}</td>
+                            <td>
+                                {{ $detalle->producto->PRO_NOMBRE }}
+                                @if($detalle->producto->PRO_TALLA)
+                                    <br><small class="text-muted">Talla: {{ $detalle->producto->PRO_TALLA }}</small>
+                                @endif
+                            </td>
                             <td>
                                 <form action="{{ route('carritos.actualizar_detalle', $detalle->DCA_ID) }}" method="POST" class="d-flex">
                                     @csrf @method('PATCH')
@@ -87,7 +94,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="text-center py-4 text-muted">Carrito vacío.</td></tr>
+                        <tr><td colspan="4" class="text-center py-4 text-muted">Carrito vacío. Agregue productos desde el panel izquierdo.</td></tr>
                         @endforelse
                     </tbody>
                     <tfoot class="table-light">
@@ -103,7 +110,9 @@
             <div class="card-footer bg-white text-end py-3">
                 <form action="{{ route('carritos.guardar', $carrito->CRD_ID) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-dark btn-lg">Guardar y Finalizar</button>
+                    <button type="submit" class="btn btn-dark btn-lg" {{ $carrito->detalles->isEmpty() ? 'disabled' : '' }}>
+                        Guardar y Finalizar
+                    </button>
                 </form>
             </div>
         </div>

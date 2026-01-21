@@ -44,7 +44,8 @@
                     <td>{{ $cli->CLI_EMAIL }}</td>
                     <td>{{ $cli->CLI_TELEFONO }}</td>
                     <td>
-                        @if($cli->CLI_ESTADO == 1)
+                        {{-- CORRECCIÓN: Validación por String 'ACTIVO' --}}
+                        @if($cli->CLI_ESTADO == 'ACTIVO')
                             <span class="badge bg-success">Activo</span>
                         @else
                             <span class="badge bg-secondary">Inactivo</span>

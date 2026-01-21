@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-md-10">
+    <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
                 <h4 class="mb-0 h5">Modificar Proveedor: {{ $proveedor->PRV_NOMBRE }}</h4>
@@ -11,23 +11,23 @@
 
                 @if ($errors->any())
                     <div class="alert alert-danger">
-                        Datos incorrectos o incompletos
+                        Datos incorrectos o incompletos.
                     </div>
                 @endif
-                
+
                 <form action="{{ route('proveedores.update', $proveedor->PRV_ID) }}" method="POST">
                     @csrf
                     @method('PUT')
 
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">RUC (13 dígitos) *</label>
                             <input type="text" name="PRV_RUC" class="form-control @error('PRV_RUC') is-invalid @enderror" value="{{ old('PRV_RUC', $proveedor->PRV_RUC) }}" maxlength="13" required>
                             @error('PRV_RUC') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-8">
-                            <label class="form-label">Razón Social / Nombre *</label>
+                        <div class="col-md-6">
+                            <label class="form-label">Razón Social *</label>
                             <input type="text" name="PRV_NOMBRE" class="form-control @error('PRV_NOMBRE') is-invalid @enderror" value="{{ old('PRV_NOMBRE', $proveedor->PRV_NOMBRE) }}" required>
                             @error('PRV_NOMBRE') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -41,16 +41,18 @@
                         <div class="col-md-6">
                             <label class="form-label">Teléfono *</label>
                             <input type="text" name="PRV_TELEFONO" class="form-control @error('PRV_TELEFONO') is-invalid @enderror" value="{{ old('PRV_TELEFONO', $proveedor->PRV_TELEFONO) }}" required>
+                            @error('PRV_TELEFONO') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-12">
                             <label class="form-label">Dirección Física *</label>
                             <input type="text" name="PRV_DIRECCION" class="form-control @error('PRV_DIRECCION') is-invalid @enderror" value="{{ old('PRV_DIRECCION', $proveedor->PRV_DIRECCION) }}" required>
+                            @error('PRV_DIRECCION') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Persona de Contacto</label>
-                            <input type="text" name="PRV_PERSONA_CONTACTO" class="form-control" value="{{ old('PRV_PERSONA_CONTACTO', $proveedor->PRV_PERSONA_CONTACTO) }}">
+                        <div class="col-12">
+                            <label class="form-label">Persona de Contacto <span class="text-muted small">(Opcional)</span></label>
+                            <input type="text" name="PRV_PERSONA_CONTACTO" class="form-control @error('PRV_PERSONA_CONTACTO') is-invalid @enderror" value="{{ old('PRV_PERSONA_CONTACTO', $proveedor->PRV_PERSONA_CONTACTO) }}">
                         </div>
                     </div>
 

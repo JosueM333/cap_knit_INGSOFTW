@@ -8,20 +8,17 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('DETALLE_CARRITO', function (Blueprint $table) {
-            $table->increments('DCA_ID');
-            $table->unsignedInteger('CRD_ID');
-            $table->unsignedInteger('PRO_ID');
+            // Usamos id() para consistencia con las otras tablas (equivale a bigIncrements)
+            $table->id('DCA_ID'); 
+            
+            $table->foreignId('CRD_ID')->constrained('CARRITO', 'CRD_ID')->onDelete('cascade');
+            $table->foreignId('PRO_ID')->constrained('PRODUCTO', 'PRO_ID')->onDelete('cascade');
+            
             $table->integer('DCA_CANTIDAD');
             $table->decimal('DCA_PRECIO_UNITARIO', 10, 2);
             $table->decimal('DCA_SUBTOTAL', 10, 2);
 
-            $table->foreign('CRD_ID')
-                  ->references('CRD_ID')
-                  ->on('CARRITO');
-
-            $table->foreign('PRO_ID')
-                  ->references('PRO_ID')
-                  ->on('PRODUCTO');
+            $table->timestamps();
         });
     }
 
@@ -30,4 +27,3 @@ return new class extends Migration {
         Schema::dropIfExists('DETALLE_CARRITO');
     }
 };
-

@@ -21,6 +21,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Cédula *</label>
+                            {{-- Se mantiene maxlength, la validación estricta (size:10) la hace el backend --}}
                             <input type="text" name="CLI_CEDULA" class="form-control @error('CLI_CEDULA') is-invalid @enderror" value="{{ old('CLI_CEDULA') }}" required maxlength="10">
                             @error('CLI_CEDULA') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -46,11 +47,14 @@
                         <div class="col-md-6">
                             <label class="form-label">Teléfono *</label>
                             <input type="text" name="CLI_TELEFONO" class="form-control @error('CLI_TELEFONO') is-invalid @enderror" value="{{ old('CLI_TELEFONO') }}" required>
+                             {{-- Agregué el bloque de error para teléfono por consistencia --}}
+                             @error('CLI_TELEFONO') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-12">
                             <label class="form-label">Dirección *</label>
                             <input type="text" name="CLI_DIRECCION" class="form-control @error('CLI_DIRECCION') is-invalid @enderror" value="{{ old('CLI_DIRECCION') }}" required>
+                            @error('CLI_DIRECCION') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-6">
@@ -60,12 +64,7 @@
                         </div>
                     </div>
 
-                    
-                    @if ($errors->any())
-                        <div class="alert alert-danger mt-3">
-                            <strong>Datos incorrectos o incompletos.</strong>
-                        </div>
-                    @endif
+
 
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <a href="{{ route('clientes.index') }}" class="btn btn-light border">Cancelar</a>

@@ -2,12 +2,10 @@
 
 @section('content')
 
-{{-- ENCABEZADO (Igual que tu diseño de referencia) --}}
 <div class="mb-4 border-bottom pb-2">
     <h1 class="h3 text-uppercase">Generar Orden de Compra</h1>
 </div>
 
-{{-- BLOQUE DE MENSAJES (Validaciones del Backend y Excepciones E1/E3) --}}
 @if(session('error'))
     <div class="alert alert-danger">
         <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
@@ -17,18 +15,13 @@
 @if($errors->any())
     <div class="alert alert-danger">
         <i class="bi bi-exclamation-circle"></i> Por favor corrija los errores en el formulario.
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
     </div>
 @endif
 
 <form action="{{ route('ordenes.store') }}" method="POST" id="formOrden">
     @csrf
 
-    {{-- PASO 5 (Parte A): SELECCIÓN DE PROVEEDOR --}}
+    {{-- SELECCIÓN DE PROVEEDOR --}}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white">
             <h5 class="mb-0 text-primary"><i class="bi bi-person-badge"></i> Datos del Proveedor</h5>
@@ -49,33 +42,25 @@
                 <div class="col-md-6">
                     <label class="form-label">Fecha de Emisión</label>
                     <input type="text" class="form-control" value="{{ date('d/m/Y') }}" readonly disabled>
-                    <small class="text-muted">La fecha se registra automáticamente al guardar.</small>
                 </div>
-            </div>
-            
-            {{-- Campo opcional para observaciones --}}
-            <div class="mt-3">
-                <label for="ORD_OBSERVACION" class="form-label">Observaciones</label>
-                <textarea name="ORD_OBSERVACION" class="form-control" rows="2" placeholder="Notas adicionales sobre la orden...">{{ old('ORD_OBSERVACION') }}</textarea>
+                {{-- ELIMINADO: Campo OBSERVACIONES (Atributo basura) --}}
             </div>
         </div>
     </div>
 
-    {{-- PASO 5 (Parte B): SELECCIÓN DE PRODUCTOS (Detalle) --}}
+    {{-- DETALLE DE PRODUCTOS --}}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-primary"><i class="bi bi-box-seam"></i> Detalle de Productos</h5>
         </div>
         
         <div class="card-body bg-light">
-            {{-- Formulario "falso" para agregar ítems a la tabla (No se envía, usa JS) --}}
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label small">Producto</label>
                     <select id="select_producto" class="form-select">
                         <option value="">-- Buscar Producto --</option>
                         @foreach($productos as $prod)
-                            {{-- Guardamos el precio en data-precio como referencia --}}
                             <option value="{{ $prod->PRO_ID }}" data-nombre="{{ $prod->PRO_NOMBRE }}" data-precio="{{ $prod->PRO_PRECIO }}">
                                 {{ $prod->PRO_CODIGO }} - {{ $prod->PRO_NOMBRE }}
                             </option>
@@ -98,7 +83,6 @@
             </div>
         </div>
 
-        {{-- TABLA VISUAL DE ITEMS --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="tablaDetalles">
                 <thead class="table-light">
@@ -111,7 +95,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- Aquí se insertan las filas con JS --}}
                     <tr id="filaVacia">
                         <td colspan="5" class="text-center py-4 text-muted">
                             No hay productos en la orden. Agregue ítems arriba.
@@ -129,7 +112,6 @@
         </div>
     </div>
 
-    {{-- PASO 6: BOTÓN GUARDAR --}}
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-5">
         <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
         <button type="submit" class="btn btn-primary btn-lg px-5">
@@ -139,7 +121,6 @@
 
 </form>
 
-{{-- SCRIPT PARA MANEJAR EL DETALLE (MASTER-DETAIL) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         let indice = 0;
@@ -153,7 +134,6 @@
         const filaVacia = document.getElementById('filaVacia');
         const labelTotal = document.getElementById('totalGlobal');
 
-        // Al cambiar producto, poner su precio sugerido
         selectProducto.addEventListener('change', function() {
             const opcion = this.options[this.selectedIndex];
             if(opcion.dataset.precio) {
@@ -163,9 +143,7 @@
             }
         });
 
-        // Evento Agregar
         btnAgregar.addEventListener('click', function() {
-            // Validaciones simples JS
             const proId = selectProducto.value;
             const proNombre = selectProducto.options[selectProducto.selectedIndex].text;
             const cantidad = parseFloat(inputCantidad.value);
@@ -176,15 +154,11 @@
                 return;
             }
 
-            // Ocultar mensaje de vacío
             if(filaVacia) filaVacia.style.display = 'none';
 
-            // Cálculos
             const subtotal = cantidad * precio;
             totalOrden += subtotal;
 
-            // Crear Fila HTML
-            // NOTA: Los inputs hidden son lo que Laravel recibirá en $request->detalles
             const fila = `
                 <tr id="fila-${indice}">
                     <td>
@@ -211,18 +185,14 @@
             `;
 
             tablaBody.insertAdjacentHTML('beforeend', fila);
-            
-            // Actualizar Total Visual
             labelTotal.textContent = '$ ' + totalOrden.toFixed(2);
 
-            // Limpiar inputs
             selectProducto.value = '';
             inputCantidad.value = 1;
             inputPrecio.value = '';
             indice++;
         });
 
-        // Función global para eliminar fila
         window.eliminarFila = function(id, subtotal) {
             const fila = document.getElementById(`fila-${id}`);
             if(fila) {
@@ -230,13 +200,11 @@
                 totalOrden -= subtotal;
                 labelTotal.textContent = '$ ' + totalOrden.toFixed(2);
                 
-                // Si no quedan filas, mostrar aviso
-                if(tablaBody.querySelectorAll('tr').length === 1) { // 1 porque filaVacia está oculta
+                if(tablaBody.querySelectorAll('tr').length === 1) { 
                     if(filaVacia) filaVacia.style.display = 'table-row';
                 }
             }
         };
     });
 </script>
-
 @endsection

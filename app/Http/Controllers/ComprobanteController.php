@@ -17,12 +17,11 @@ class ComprobanteController extends Controller
             $comprobantes = Comprobante::with('cliente')
                                        ->orderBy('COM_ID', 'desc')
                                        ->get();
-            if ($comprobantes->isEmpty()) {
-                session()->flash('info', 'No se encontraron comprobantes emitidos');
-            }
+            
             return view('comprobantes.index', compact('comprobantes'));
+
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Error de conexión: ' . $e->getMessage()]);
+            return back()->with('error', 'Error de conexión: ' . $e->getMessage());
         }
     }
 
@@ -31,24 +30,27 @@ class ComprobanteController extends Controller
     {
         try {
             $request->validate(['criterio' => 'required|string']);
-            $criterio = $request->input('criterio');
-            $comprobantes = Comprobante::buscarPorCriterio($criterio);
+            
+            $comprobantes = Comprobante::buscarPorCriterio($request->criterio);
 
             if ($comprobantes->isEmpty()) {
-                return redirect()->route('comprobantes.index')
-                                 ->withErrors(['search_error' => 'Comprobante no localizado']);
+                session()->flash('error', 'Comprobante no localizado.');
             }
+            
             return view('comprobantes.index', compact('comprobantes'));
+
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Error de sistema: ' . $e->getMessage()]);
+            return back()->with('error', 'Error de sistema: ' . $e->getMessage());
         }
     }
 
     // --- F5.1 Crear (Vistas y Store) ---
     public function create()
     {
+        // Solo mostramos carritos que estén GUARDADOS (listos para facturar)
         $ventasPendientes = Carrito::where('CRD_ESTADO', 'GUARDADO')
                                    ->with('cliente')->get();
+                                   
         return view('comprobantes.create', compact('ventasPendientes'));
     }
 
@@ -59,22 +61,28 @@ class ComprobanteController extends Controller
             'observaciones' => 'nullable|string|max:255',
         ]);
 
+        // Validación de negocio: No facturar dos veces
         if (Comprobante::where('CRD_ID', $request->CRD_ID)->exists()) {
-            return back()->withErrors(['error' => 'Esta venta ya ha sido facturada previamente.']);
+            return back()->with('error', 'Esta venta ya ha sido facturada previamente.');
         }
 
         DB::beginTransaction();
         try {
             $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
+            
+            // Recálculo de seguridad (aunque ya debería estar en el carrito)
             $subtotal = 0;
             foreach ($carrito->detalles as $detalle) {
                 $subtotal += ($detalle->DCA_CANTIDAD * $detalle->DCA_PRECIO_UNITARIO);
             }
+            
+            // IVA 15% (Según tu lógica actual)
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
-            if ($total <= 0) throw new Exception("Total cero.");
+            if ($total <= 0) throw new Exception("El total a facturar no puede ser cero.");
 
+            // Crear Comprobante
             $comprobante = new Comprobante();
             $comprobante->CRD_ID = $carrito->CRD_ID;
             $comprobante->CLI_ID = $carrito->CLI_ID;
@@ -86,107 +94,85 @@ class ComprobanteController extends Controller
             $comprobante->COM_ESTADO = 'EMITIDO';
             $comprobante->save();
 
+            // Actualizar estado del carrito para cerrar el ciclo
             $carrito->CRD_ESTADO = 'FACTURADA';
             $carrito->save();
 
             DB::commit();
             return redirect()->route('comprobantes.show', $comprobante->COM_ID)
                              ->with('success', 'Factura emitida correctamente.');
+
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
-    // --- F5.1 Ver ---
+    // --- F5.1 Ver Detalle ---
     public function show($id)
     {
         $comprobante = Comprobante::with(['cliente', 'carrito.detalles.producto'])->findOrFail($id);
         return view('comprobantes.show', compact('comprobante'));
     }
 
-    // =========================================================
-    // CASO F5.4 – Modificar Comprobante
-    // =========================================================
-
-    /**
-     * Paso 5: El sistema carga los datos.
-     */
+    // --- F5.4 Modificar (Solo observaciones) ---
     public function edit($id)
     {
         try {
-            // E2: El registro solicitado no existe (findOrFail lanza excepción si no lo halla)
             $comprobante = Comprobante::findOrFail($id);
             
-            // Validamos que no esté anulado (Lógica de negocio extra)
             if ($comprobante->COM_ESTADO === 'ANULADO') {
-                return back()->withErrors(['error' => 'No se puede editar un comprobante ANULADO.']);
+                return redirect()->route('comprobantes.index')
+                                 ->with('error', 'No se puede editar un comprobante ANULADO.');
             }
 
             return view('comprobantes.edit', compact('comprobante'));
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Error al cargar el comprobante: ' . $e->getMessage()]);
+            return back()->with('error', 'Error al cargar el comprobante.');
         }
     }
 
-    /**
-     * Paso 9 y 10: Validar consistencia y Guardar cambios.
-     */
     public function update(Request $request, $id)
     {
         try {
             $comprobante = Comprobante::findOrFail($id);
 
-            // F5.4 Paso 6 (Flujo Alterno): El sistema NO permite modificar campos fiscales.
-            // Solo validamos y actualizamos 'observaciones'.
+            // Solo permitimos editar observaciones (Datos fiscales son inmutables)
             $request->validate([
                 'observaciones' => 'nullable|string|max:255',
             ]);
 
-            // Paso 10: Guardar cambios en la base de datos (E1)
             $comprobante->COM_OBSERVACIONES = $request->input('observaciones');
             $comprobante->save();
 
             return redirect()->route('comprobantes.index')
-                             ->with('success', 'Comprobante actualizado correctamente (Campos no fiscales).');
+                             ->with('success', 'Observaciones actualizadas correctamente.');
 
         } catch (Exception $e) {
-            // E1 / E3
-            return back()->withErrors(['error' => 'Error de actualización: ' . $e->getMessage()]);
+            return back()->with('error', 'Error de actualización: ' . $e->getMessage());
         }
     }
 
-    // =========================================================
-    // CASO F5.5 – Borrar (Anular) Comprobante
-    // =========================================================
-
-    /**
-     * Paso 8 y 9: Borra el registro (lógico) y cambia estado a ANULADO.
-     */
+    // --- F5.5 Anular (Borrado Lógico) ---
     public function anular(Request $request, $id)
     {
         try {
-            // E2: Validar que existe
             $comprobante = Comprobante::findOrFail($id);
 
-            // Validar Paso 6: El sistema solicita el motivo.
             $request->validate([
                 'motivo_anulacion' => 'required|string|min:5|max:200'
             ]);
 
             DB::beginTransaction();
 
-            // Paso 9: Cambia el estado a "ANULADO"
+            // Cambio de Estado
             $comprobante->COM_ESTADO = 'ANULADO';
             
-            // Guardamos el motivo concatenado en observaciones (para no alterar tu tabla actual)
+            // Registrar motivo en historial (append)
             $motivo = $request->input('motivo_anulacion');
-            $comprobante->COM_OBSERVACIONES .= " | [ANULADO]: " . $motivo;
+            $comprobante->COM_OBSERVACIONES .= " | [ANULADO " . now()->format('d/m/Y') . "]: " . $motivo;
             
-            $comprobante->save(); // E1
-
-            // Opcional: Liberar el Carrito original si se anula la factura
-            // $comprobante->carrito->update(['CRD_ESTADO' => 'ANULADO']);
+            $comprobante->save();
 
             DB::commit();
 
@@ -194,8 +180,8 @@ class ComprobanteController extends Controller
                              ->with('success', 'Comprobante ANULADO correctamente.');
 
         } catch (Exception $e) {
-            DB::rollBack(); // E1
-            return back()->withErrors(['error' => 'Error al anular comprobante: ' . $e->getMessage()]);
+            DB::rollBack();
+            return back()->with('error', 'Error al anular: ' . $e->getMessage());
         }
     }
 }

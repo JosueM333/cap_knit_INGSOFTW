@@ -39,12 +39,12 @@
                 <tr>
                     <td class="fw-bold">{{ $bodega->BOD_NOMBRE }}</td>
                     <td>{{ $bodega->BOD_UBICACION }}</td>
-                    <td>{{ $bodega->BOD_DESCRIPCION ?? '---' }}</td>
+                    <td>{{ Str::limit($bodega->BOD_DESCRIPCION, 50, '...') ?: '---' }}</td>
                     <td class="text-end">
                         <a href="{{ route('bodegas.edit', $bodega->BOD_ID) }}" class="btn btn-sm btn-outline-primary me-1">Editar</a>
                         
                         <form action="{{ route('bodegas.destroy', $bodega->BOD_ID) }}" method="POST" class="d-inline" 
-                              onsubmit="return confirm('ATENCIÓN: Se eliminará FÍSICAMENTE esta bodega.\n¿Está seguro?');">
+                              onsubmit="return confirm('ATENCIÓN: Esto eliminará PERMANENTEMENTE la bodega {{ $bodega->BOD_NOMBRE }}. ¿Desea continuar?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>

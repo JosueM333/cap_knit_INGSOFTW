@@ -9,29 +9,19 @@ class Comprobante extends Model
 {
     use HasFactory;
 
-    // 1. Nombre de la tabla
     protected $table = 'COMPROBANTE';
-
-    // 2. Llave primaria personalizada
     protected $primaryKey = 'COM_ID';
+    public $timestamps = true; // Estándar
 
-    // 3. Activamos timestamps
-    public $timestamps = true;
-
-    // 4. Definimos los nombres de las columnas de fecha
-    const CREATED_AT = 'COM_CREATED_AT';
-    const UPDATED_AT = 'COM_UPDATED_AT';
-
-    // 5. Campos asignables
     protected $fillable = [
-        'CRD_ID',           // ID del Carrito
-        'CLI_ID',           // ID del Cliente
-        'COM_FECHA',        // Fecha de Emisión
+        'CRD_ID',
+        'CLI_ID',
+        'COM_FECHA',
         'COM_SUBTOTAL',     
-        'COM_IVA',          // Monto del IVA (15%)
-        'COM_TOTAL',        // Monto Total
+        'COM_IVA',
+        'COM_TOTAL',
         'COM_OBSERVACIONES',
-        'COM_ESTADO'        // Ej: 'EMITIDO'
+        'COM_ESTADO'
     ];
 
     /* =========================================================
@@ -49,19 +39,17 @@ class Comprobante extends Model
     }
 
     /* =========================================================
-       LOGICA DE NEGOCIO (CASO F5.3)
+       LOGICA DE NEGOCIO
        ========================================================= */
 
-    /**
-     * Busca comprobantes por ID de factura O Cédula del cliente.
-     */
     public static function buscarPorCriterio($criterio)
     {
         return self::where('COM_ID', $criterio)
                    ->orWhereHas('cliente', function ($query) use ($criterio) {
-                       $query->where('CLI_CEDULA', $criterio);
+                       $query->where('CLI_CEDULA', 'LIKE', "%$criterio%");
                    })
-                   ->with('cliente') // Optimización: Trae datos del cliente
+                   ->with('cliente')
+                   ->orderBy('COM_ID', 'desc')
                    ->get();
     }
 }

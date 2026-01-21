@@ -13,11 +13,11 @@ class Carrito extends Model
 
     protected $table = 'CARRITO';
     protected $primaryKey = 'CRD_ID';
-    public $timestamps = false;
+    public $timestamps = true; // Usamos el estándar
 
     protected $fillable = [
         'CLI_ID',
-        'CRD_FECHA_CREACION',
+        // ELIMINADO: CRD_FECHA_CREACION (Se usa created_at)
         'CRD_ESTADO',
         'CRD_SUBTOTAL',
         'CRD_IMPUESTO',
@@ -39,7 +39,7 @@ class Carrito extends Model
     }
 
     /* =========================
-       VALIDACIONES
+       LÓGICA DE NEGOCIO
        ========================= */
 
     public static function validarCreacion(array $datos)
@@ -53,10 +53,6 @@ class Carrito extends Model
         }
     }
 
-    /* =========================
-       CASO F7.1 – Crear carrito
-       ========================= */
-
     public static function crearCarrito(array $data)
     {
         return self::create([
@@ -68,10 +64,6 @@ class Carrito extends Model
         ]);
     }
 
-    /* =========================
-       CASO F7.2 – Consultar Carritos
-       ========================= */
-
     public static function obtenerCarritosActivos()
     {
         return self::whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
@@ -80,31 +72,20 @@ class Carrito extends Model
             ->get();
     }
 
-    /* =========================
-       CASO F7.3 – Buscar carrito por cliente
-       ========================= */
-
     public static function buscarPorCliente(string $criterio)
     {
         return self::whereHas('cliente', function ($q) use ($criterio) {
             $q->where('CLI_CEDULA', 'LIKE', "%{$criterio}%")
-            ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
+              ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
         })
         ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
         ->with(['cliente', 'detalles.producto'])
         ->get();
     }
 
-    /* =========================
-       CASO F7.4 – Recalcular totales
-       ========================= */
-
     public function recalcularTotales()
     {
-        $subtotal = $this->detalles->sum(function ($item) {
-            return $item->DCA_CANTIDAD * $item->DCA_PRECIO_UNITARIO;
-        });
-
+        $subtotal = $this->detalles->sum('DCA_SUBTOTAL'); // Optimizado
         $impuesto = $subtotal * 0.12; 
         $total    = $subtotal + $impuesto;
 
@@ -115,16 +96,13 @@ class Carrito extends Model
         ]);
     }
 
-    /* =========================
-       CASO F7.5 – Vaciar carrito
-       ========================= */
-
     public function vaciar()
     {
+        // Borrado físico de los detalles
         $this->detalles()->delete();
 
         $this->update([
-            'CRD_ESTADO'    => 'VACIADO',
+            'CRD_ESTADO'   => 'VACIADO',
             'CRD_SUBTOTAL' => 0,
             'CRD_IMPUESTO' => 0,
             'CRD_TOTAL'    => 0

@@ -20,11 +20,13 @@ return new class extends Migration
             $table->string('CLI_TELEFONO')->nullable();
             $table->string('CLI_DIRECCION')->nullable();
             $table->string('CLI_PASSWORD');
+            
+            // Estado definido como string, por defecto 'ACTIVO'
             $table->string('CLI_ESTADO')->default('ACTIVO');
+            
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.

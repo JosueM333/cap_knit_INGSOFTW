@@ -34,16 +34,17 @@ class HomeController extends Controller
 
     public function products()
     {
-        $productos = Producto::where('PRO_VISIBLE', 1)
-                             ->where('PRO_ESTADO', 1)
-                             ->get();
+        // CORRECCIÓN: Eliminados filtros de columnas inexistentes (PRO_VISIBLE, PRO_ESTADO)
+        // Ahora traemos todos los productos existentes físicamente.
+        $productos = Producto::all();
 
         return view('shop.products', compact('productos'));
     }
 
     public function show($id)
     {
-        $producto = Producto::where('PRO_VISIBLE', 1)->findOrFail($id);
+        // CORRECCIÓN: Eliminado filtro PRO_VISIBLE
+        $producto = Producto::findOrFail($id);
         return view('shop.show', compact('producto'));
     }
 
@@ -76,9 +77,7 @@ class HomeController extends Controller
             $cli_id = Auth::guard('cliente')->user()->CLI_ID;
         } elseif (Auth::guard('web')->check()) {
             // Es un Admin probando la compra. 
-            // IMPORTANTE: Asegúrate de tener un cliente con ID 1 en la BD para pruebas, 
-            // o esto fallará por clave foránea.
-            $cli_id = 1; 
+            $cli_id = 1; // Asegúrate de que exista el Cliente ID 1 para pruebas
         } else {
             return redirect()->route('login')->with('error', 'Debes iniciar sesión para comprar.');
         }
@@ -95,6 +94,11 @@ class HomeController extends Controller
 
             $carritoBD = Carrito::create([
                 'CLI_ID'         => $cli_id, 
+                // CRD_FECHA_CREACION removido si usas timestamps estándar, 
+                // pero si tu migración final lo conservó, déjalo aquí.
+                // Basado en tu último modelo Carrito, usas timestamps false y CRD_FECHA_CREACION manual?
+                // Si aplicaste mi corrección de Carrito, esto debería ser automático (created_at).
+                // Pero lo dejo como lo tenías para evitar romper esa parte si no actualizaste el modelo.
                 'CRD_FECHA_CREACION' => now(),
                 'CRD_ESTADO'     => 'GUARDADO', 
                 'CRD_SUBTOTAL'   => $subtotal,
@@ -186,10 +190,6 @@ class HomeController extends Controller
     // ZONA PRIVADA (ADMIN)
     // ==========================================
 
-    /**
-     * Panel Principal del Admin
-     * Requiere autenticación (ver __construct)
-     */
     public function dashboard()
     {
         return view('home');
