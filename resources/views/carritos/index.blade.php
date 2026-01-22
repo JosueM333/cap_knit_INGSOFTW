@@ -13,23 +13,13 @@
     </div>
 @endif
 
-@if(session('success'))
-    <div class="alert alert-success">
-        <i class="bi bi-check-circle"></i> {{ session('success') }}
-    </div>
-@endif
 
 {{-- PANEL DE ACCIONES --}}
 <div class="card shadow-sm border-0 mb-4 bg-light">
     <div class="card-body">
         <div class="row g-3 align-items-end">
             
-            {{-- CASO F7.2: CONSULTAR CARRITOS --}}
-            <div class="col-md-3">
-                <a href="{{ route('carritos.consultar') }}" class="btn btn-dark w-100">
-                    Consultar Carritos
-                </a>
-            </div>
+
 
             {{-- CASO F7.3: BUSCAR CARRITO (Solo Cédula/Correo) --}}
             <div class="col-md-9">

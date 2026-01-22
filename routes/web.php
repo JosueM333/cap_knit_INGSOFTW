@@ -13,19 +13,11 @@ use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\OrdenCompraController; 
 use App\Http\Controllers\ComprobanteController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
 
-// Rutas de autenticación (Login, Logout, Registro, Reset Password)
+
 Auth::routes();
 
-// ==================================================
-// 🛒 ZONA PÚBLICA – CUALQUIERA PUEDE ENTRAR
-// ==================================================
-
+// Rutas Públicas - Accesibles para todos los usuarios y no gatitos
 Route::get('/', [HomeController::class, 'index'])->name('shop.index');
 
 // Catálogo y Productos
@@ -45,10 +37,7 @@ Route::post('/shop/comprar', [HomeController::class, 'comprar'])
     ->middleware('auth:cliente,web'); 
 
 
-// ==================================================
-// 🔒 ZONA ADMIN (PROTEGIDA)
-// Solo accesible si estás logueado como Admin (users table)
-// ==================================================
+// ZONA DE ADMIN – SOLO USUARIOS AUTENTICADOS Y GATITOS PUEDEN ENTRAR
 
 Route::middleware(['auth'])->group(function () {
 
@@ -65,7 +54,7 @@ Route::middleware(['auth'])->group(function () {
     // 3. Gestión de Carritos (Admin)
     Route::prefix('carritos')->group(function () {
         Route::get('/', [CarritoController::class, 'index'])->name('carritos.index');
-        Route::get('/consultar', [CarritoController::class, 'consultar'])->name('carritos.consultar');
+        //Route::get('/consultar', [CarritoController::class, 'consultar'])->name('cansultar');
         
         // Búsquedas
         Route::post('/buscar-carrito', [CarritoController::class, 'buscarCarrito'])->name('carritos.buscar_carrito');
