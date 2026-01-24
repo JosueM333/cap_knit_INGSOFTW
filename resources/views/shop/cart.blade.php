@@ -67,8 +67,8 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <img src="{{ asset('img/productos/gorranewera.jpg') }}"
-                                             alt="" 
+                                        <img src="{{ asset($item['image'] ?? 'static/img/gorra_default.jpg') }}"
+                                             alt="{{ $item['name'] }} - {{ $item['price'] }}" 
                                              class="rounded border border-dark" 
                                              width="60" height="60"
                                              aria-hidden="true"
@@ -146,11 +146,11 @@
                                         
                                         <div class="d-flex justify-content-between fw-bold fs-4 bg-light p-2 border border-dark rounded">
                                             <span>Total:</span>
-                                            <span class="text-success">${{ number_format($totalPagar, 2) }}</span>
+                                            <span class="text-success" id="cart-total-display" data-amount="{{ $totalPagar }}">${{ number_format($totalPagar, 2) }}</span>
                                         </div>
                                         
                                         <div class="d-grid gap-2 mt-4">
-                                            <form action="{{ route('shop.comprar') }}" method="POST">
+                                            <form action="{{ route('shop.comprar') }}" method="POST" id="formCompra" onsubmit="return checkHighAmount(event)">
                                                 @csrf
                                                 <button type="submit" class="btn btn-success fw-bold w-100 btn-lg shadow border-2 border-success text-uppercase">
                                                     Pagar Compra
@@ -168,6 +168,52 @@
                     </tfoot>
                 </table>
             </div>
+            
+            {{-- MODAL CONFIRMACION MONTO ALTO --}}
+            <div class="modal fade" id="highAmountModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content border-warning">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Confirmación de Seguridad</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center py-4">
+                            <p class="lead">El monto total a pagar es superior a <strong>$5,000.00</strong>.</p>
+                            <p class="mb-0">¿Confirma que desea procesar esta transacción por <strong>${{ number_format($totalPagar, 2) }}</strong>?</p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-warning fw-bold" onclick="submitHighAmount()">Confirmar y Pagar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function checkHighAmount(event) {
+                    // Obtener total dinámicamente del DOM para soportar actualizaciones AJAX
+                    const totalElement = document.getElementById('cart-total-display');
+                    let total = 0;
+                    
+                    if (totalElement) {
+                        // Preferir data-amount si existe (valor crudo), sino parsear texto
+                        total = parseFloat(totalElement.getAttribute('data-amount')) || 
+                                parseFloat(totalElement.textContent.replace(/[$,]/g, '')) || 0;
+                    }
+
+                    if (total > 5000) {
+                        event.preventDefault();
+                        var myModal = new bootstrap.Modal(document.getElementById('highAmountModal'));
+                        myModal.show();
+                        return false;
+                    }
+                    return true;
+                }
+
+                function submitHighAmount() {
+                    document.getElementById('formCompra').submit();
+                }
+            </script>
         @else
             <div class="text-center py-5 border border-2 border-dark rounded shadow-sm bg-light">
                 <i class="bi bi-cart-x fs-1 text-muted" aria-hidden="true"></i>

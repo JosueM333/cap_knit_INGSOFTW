@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- BREADCRUMBS --}}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('home') }}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('productos.index') }}">Productos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Editar</li>
+    </ol>
+</nav>
 <div class="row justify-content-center">
     <div class="col-md-10">
         <div class="card shadow-sm border-0">

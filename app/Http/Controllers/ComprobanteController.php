@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comprobante;
-use App\Models\Carrito; 
+use App\Models\Carrito;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class ComprobanteController extends Controller
@@ -15,13 +16,14 @@ class ComprobanteController extends Controller
     {
         try {
             $comprobantes = Comprobante::with('cliente')
-                                       ->orderBy('COM_ID', 'desc')
-                                       ->get();
-            
+                ->orderBy('COM_ID', 'desc')
+                ->get();
+
             return view('comprobantes.index', compact('comprobantes'));
 
         } catch (Exception $e) {
-            return back()->with('error', 'Error de conexión: ' . $e->getMessage());
+            Log::error("Error en index comprobantes: " . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al cargar los comprobantes.');
         }
     }
 
@@ -30,17 +32,18 @@ class ComprobanteController extends Controller
     {
         try {
             $request->validate(['criterio' => 'required|string']);
-            
+
             $comprobantes = Comprobante::buscarPorCriterio($request->criterio);
 
             if ($comprobantes->isEmpty()) {
                 session()->flash('error', 'Comprobante no localizado.');
             }
-            
+
             return view('comprobantes.index', compact('comprobantes'));
 
         } catch (Exception $e) {
-            return back()->with('error', 'Error de sistema: ' . $e->getMessage());
+            Log::error("Error buscando comprobante: " . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al procesar la búsqueda.');
         }
     }
 
@@ -49,8 +52,8 @@ class ComprobanteController extends Controller
     {
         // Solo mostramos carritos que estén GUARDADOS (listos para facturar)
         $ventasPendientes = Carrito::where('CRD_ESTADO', 'GUARDADO')
-                                   ->with('cliente')->get();
-                                   
+            ->with('cliente')->get();
+
         return view('comprobantes.create', compact('ventasPendientes'));
     }
 
@@ -69,18 +72,19 @@ class ComprobanteController extends Controller
         DB::beginTransaction();
         try {
             $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
-            
+
             // Recálculo de seguridad (aunque ya debería estar en el carrito)
             $subtotal = 0;
             foreach ($carrito->detalles as $detalle) {
                 $subtotal += ($detalle->DCA_CANTIDAD * $detalle->DCA_PRECIO_UNITARIO);
             }
-            
+
             // IVA 15% (Según tu lógica actual)
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
-            if ($total <= 0) throw new Exception("El total a facturar no puede ser cero.");
+            if ($total <= 0)
+                throw new Exception("El total a facturar no puede ser cero.");
 
             // Crear Comprobante
             $comprobante = new Comprobante();
@@ -100,11 +104,12 @@ class ComprobanteController extends Controller
 
             DB::commit();
             return redirect()->route('comprobantes.show', $comprobante->COM_ID)
-                             ->with('success', 'Factura emitida correctamente.');
+                ->with('success', 'Factura emitida correctamente.');
 
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', $e->getMessage())->withInput();
+            Log::error("Error emitiendo factura: " . $e->getMessage());
+            return back()->with('error', 'Error al emitir la factura. Por favor intente nuevamente.')->withInput();
         }
     }
 
@@ -120,15 +125,16 @@ class ComprobanteController extends Controller
     {
         try {
             $comprobante = Comprobante::findOrFail($id);
-            
+
             if ($comprobante->COM_ESTADO === 'ANULADO') {
                 return redirect()->route('comprobantes.index')
-                                 ->with('error', 'No se puede editar un comprobante ANULADO.');
+                    ->with('error', 'No se puede editar un comprobante ANULADO.');
             }
 
             return view('comprobantes.edit', compact('comprobante'));
         } catch (Exception $e) {
-            return back()->with('error', 'Error al cargar el comprobante.');
+            Log::error("Error cargando comprobante para editar ($id): " . $e->getMessage());
+            return back()->with('error', 'No se pudo cargar el comprobante solicitado.');
         }
     }
 
@@ -146,10 +152,11 @@ class ComprobanteController extends Controller
             $comprobante->save();
 
             return redirect()->route('comprobantes.index')
-                             ->with('success', 'Observaciones actualizadas correctamente.');
+                ->with('success', 'Observaciones actualizadas correctamente.');
 
         } catch (Exception $e) {
-            return back()->with('error', 'Error de actualización: ' . $e->getMessage());
+            Log::error("Error actualizando comprobante ($id): " . $e->getMessage());
+            return back()->with('error', 'Error al actualizar las observaciones.');
         }
     }
 
@@ -167,21 +174,22 @@ class ComprobanteController extends Controller
 
             // Cambio de Estado
             $comprobante->COM_ESTADO = 'ANULADO';
-            
+
             // Registrar motivo en historial (append)
             $motivo = $request->input('motivo_anulacion');
             $comprobante->COM_OBSERVACIONES .= " | [ANULADO " . now()->format('d/m/Y') . "]: " . $motivo;
-            
+
             $comprobante->save();
 
             DB::commit();
 
             return redirect()->route('comprobantes.index')
-                             ->with('success', 'Comprobante ANULADO correctamente.');
+                ->with('success', 'Comprobante ANULADO correctamente.');
 
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al anular: ' . $e->getMessage());
+            Log::error("Error anulando comprobante ($id): " . $e->getMessage());
+            return back()->with('error', 'Error inesperado al anular el comprobante.');
         }
     }
 }
