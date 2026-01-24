@@ -36,10 +36,20 @@ class RegisterController extends Controller
             'CLI_APELLIDOS' => $data['CLI_APELLIDOS'],
             'CLI_EMAIL' => $data['CLI_EMAIL'],
             'CLI_PASSWORD' => Hash::make($data['password']),
-            'CLI_CEDULA' => '9999999999',
+            'CLI_CEDULA' => '9999999999', // Valor por defecto o pedirlo en formulario si es necesario
             'CLI_TELEFONO' => '0000000000',
             'CLI_DIRECCION' => 'Sin dirección',
             'CLI_ESTADO' => 1,
         ]);
+    }
+
+    /**
+     * Get the guard to be used during registration.
+     *
+     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     */
+    protected function guard()
+    {
+        return \Illuminate\Support\Facades\Auth::guard('cliente');
     }
 }
