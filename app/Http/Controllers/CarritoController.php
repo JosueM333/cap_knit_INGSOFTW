@@ -154,8 +154,8 @@ class CarritoController extends Controller
         $subtotal = CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->sum('DCA_SUBTOTAL');
         $carrito->update([
             'CRD_SUBTOTAL' => $subtotal,
-            'CRD_IMPUESTO' => $subtotal * 0.12,
-            'CRD_TOTAL' => ($subtotal * 1.12)
+            'CRD_IMPUESTO' => $subtotal * 0.15,
+            'CRD_TOTAL' => ($subtotal * 1.15)
         ]);
     }
 

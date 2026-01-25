@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comprobante;
 use App\Models\DetalleComprobante;
 use App\Models\Carrito;
+use App\Models\CarritoDetalle; // Importado
 use App\Models\Bodega;
 use App\Models\Kardex;
 use App\Models\Transaccion;
@@ -194,6 +195,10 @@ class ComprobanteController extends Controller
             // 5) Marcar carrito como facturado
             $carrito->CRD_ESTADO = 'FACTURADA';
             $carrito->save();
+
+            // 6) Limpiar DETALLE_CARRITO (Requisito: eliminar detalle físico tras facturar)
+            // Se asume que los datos ya viven en DETALLE_COMPROBANTE
+            CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->delete();
 
             DB::commit();
 

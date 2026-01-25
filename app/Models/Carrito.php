@@ -91,7 +91,7 @@ class Carrito extends Model
     public function recalcularTotales()
     {
         $subtotal = $this->detalles->sum('DCA_SUBTOTAL'); // Optimizado
-        $impuesto = $subtotal * 0.12;
+        $impuesto = $subtotal * 0.15;
         $total = $subtotal + $impuesto;
 
         $this->update([
