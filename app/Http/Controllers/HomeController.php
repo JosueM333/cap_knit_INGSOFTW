@@ -61,6 +61,8 @@ class HomeController extends Controller
     /**
      * PROCESAR COMPRA REAL
      */
+
+
     public function comprar(Request $request)
     {
         $cart = session()->get('cart');
@@ -69,15 +71,13 @@ class HomeController extends Controller
             return redirect()->route('shop.cart')->with('error', 'No hay productos en el carrito.');
         }
 
-        // Detectar ID del cliente de forma segura
+        // Detectar ID del cliente
         $cli_id = null;
 
         if (Auth::guard('cliente')->check()) {
-            // Es un cliente real
             $cli_id = Auth::guard('cliente')->user()->CLI_ID;
         } elseif (Auth::guard('web')->check()) {
-            // Es un Admin probando la compra. 
-            $cli_id = 1; // Asegúrate de que exista el Cliente ID 1 para pruebas
+            $cli_id = 1; // para pruebas (asegúrate que exista)
         } else {
             return redirect()->route('login')->with('error', 'Debes iniciar sesión para comprar.');
         }
@@ -85,50 +85,63 @@ class HomeController extends Controller
         DB::beginTransaction();
 
         try {
+            // Totales
             $subtotal = 0;
             foreach ($cart as $id => $details) {
-                $subtotal += $details['price'] * $details['quantity'];
+                $subtotal += ((float) $details['price']) * ((int) $details['quantity']);
             }
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
-            $carritoBD = Carrito::create([
-                'CLI_ID' => $cli_id,
-                // CRD_FECHA_CREACION removido si usas timestamps estándar, 
-                // pero si tu migración final lo conservó, déjalo aquí.
-                // Basado en tu último modelo Carrito, usas timestamps false y CRD_FECHA_CREACION manual?
-                // Si aplicaste mi corrección de Carrito, esto debería ser automático (created_at).
-                // Pero lo dejo como lo tenías para evitar romper esa parte si no actualizaste el modelo.
-                'CRD_FECHA_CREACION' => now(),
-                'CRD_ESTADO' => 'GUARDADO',
-                'CRD_SUBTOTAL' => $subtotal,
-                'CRD_IMPUESTO' => $iva,
-                'CRD_TOTAL' => $total
-            ]);
+            // 1) Obtener CRD_ID desde SEQUENCE (sin RETURNING, funciona con DBLINK + sinónimo)
+            $nextCarrito = DB::selectOne('SELECT CARRITO_SEQ.NEXTVAL AS ID FROM DUAL');
+            $carritoId = (int) $nextCarrito->id;
 
-            foreach ($cart as $id => $details) {
-                CarritoDetalle::create([
-                    'CRD_ID' => $carritoBD->CRD_ID,
-                    'PRO_ID' => $id,
-                    'PRO_CODIGO' => $details['code'] ?? 'N/A', // Snapshot
-                    'PRO_NOMBRE' => $details['name'],           // Snapshot
-                    'DCA_CANTIDAD' => $details['quantity'],
-                    'DCA_PRECIO_UNITARIO' => $details['price'],
-                    'DCA_SUBTOTAL' => $details['price'] * $details['quantity']
-                ]);
+            // 2) Insertar cabecera CARRITO (NO uses CRD_FECHA_CREACION si tu tabla ya no la tiene)
+            $carritoBD = new Carrito();
+            $carritoBD->CRD_ID = $carritoId;
+            $carritoBD->CLI_ID = $cli_id;
+            $carritoBD->CRD_ESTADO = 'GUARDADO';
+            $carritoBD->CRD_SUBTOTAL = $subtotal;
+            $carritoBD->CRD_IMPUESTO = $iva;
+            $carritoBD->CRD_TOTAL = $total;
+            $carritoBD->save();
+
+            // 3) Insertar detalle DETALLE_CARRITO
+            foreach ($cart as $proId => $details) {
+
+                // Si DETALLE_CARRITO vive en BD2 por DBLINK, evita RETURNING también:
+                $nextDetalle = DB::selectOne('SELECT DETALLE_CARRITO_SEQ.NEXTVAL AS ID FROM DUAL');
+                $detalleId = (int) $nextDetalle->id;
+
+                $detalle = new CarritoDetalle();
+                $detalle->DCA_ID = $detalleId;
+                $detalle->CRD_ID = $carritoId;
+                $detalle->PRO_ID = (int) $proId;
+
+                // Snapshots
+                $detalle->PRO_CODIGO = $details['code'] ?? 'N/A';
+                $detalle->PRO_NOMBRE = $details['name'];
+
+                $detalle->DCA_CANTIDAD = (int) $details['quantity'];
+                $detalle->DCA_PRECIO_UNITARIO = (float) $details['price'];
+                $detalle->DCA_SUBTOTAL = ((float) $details['price']) * ((int) $details['quantity']);
+
+                $detalle->save();
             }
 
             DB::commit();
             session()->forget('cart');
 
             return redirect()->route('shop.index')
-                ->with('success', '¡Compra #' . $carritoBD->CRD_ID . ' realizada con éxito!');
+                ->with('success', '¡Compra #' . $carritoId . ' realizada con éxito!');
 
         } catch (Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Error al procesar la compra: ' . $e->getMessage());
         }
     }
+
 
     // ==========================================
     // LÓGICA DEL CARRITO (SESIÓN)
