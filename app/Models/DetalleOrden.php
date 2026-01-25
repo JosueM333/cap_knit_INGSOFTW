@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\OracleCompatible;
 
 class DetalleOrden extends Model
 {
-    use HasFactory;
+    use HasFactory, OracleCompatible;
 
     protected $table = 'DETALLE_ORDEN';
     protected $primaryKey = 'DOR_ID';
-    
+
     // Al dejar esto en true sin definir constantes, Laravel usará 'created_at' y 'updated_at'
     // lo cual coincide perfectamente con tu migración corregida.
     public $timestamps = true;

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use App\Traits\OracleCompatible;
 
 class Carrito extends Model
 {
-    use HasFactory;
+    use HasFactory, OracleCompatible;
 
     protected $table = 'CARRITO';
     protected $primaryKey = 'CRD_ID';
@@ -76,23 +77,23 @@ class Carrito extends Model
     {
         return self::whereHas('cliente', function ($q) use ($criterio) {
             $q->where('CLI_CEDULA', 'LIKE', "%{$criterio}%")
-              ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
+                ->orWhere('CLI_EMAIL', 'LIKE', "%{$criterio}%");
         })
-        ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
-        ->with(['cliente', 'detalles.producto'])
-        ->get();
+            ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
+            ->with(['cliente', 'detalles.producto'])
+            ->get();
     }
 
     public function recalcularTotales()
     {
         $subtotal = $this->detalles->sum('DCA_SUBTOTAL'); // Optimizado
-        $impuesto = $subtotal * 0.12; 
-        $total    = $subtotal + $impuesto;
+        $impuesto = $subtotal * 0.12;
+        $total = $subtotal + $impuesto;
 
         $this->update([
             'CRD_SUBTOTAL' => $subtotal,
             'CRD_IMPUESTO' => $impuesto,
-            'CRD_TOTAL'    => $total
+            'CRD_TOTAL' => $total
         ]);
     }
 
@@ -102,10 +103,10 @@ class Carrito extends Model
         $this->detalles()->delete();
 
         $this->update([
-            'CRD_ESTADO'   => 'VACIADO',
+            'CRD_ESTADO' => 'VACIADO',
             'CRD_SUBTOTAL' => 0,
             'CRD_IMPUESTO' => 0,
-            'CRD_TOTAL'    => 0
+            'CRD_TOTAL' => 0
         ]);
     }
 }

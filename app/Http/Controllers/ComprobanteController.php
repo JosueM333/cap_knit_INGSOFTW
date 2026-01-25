@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Comprobante;
 use App\Models\Carrito;
+use App\Models\Bodega;
+use App\Models\Kardex;
+use App\Models\Transaccion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -54,15 +57,20 @@ class ComprobanteController extends Controller
         $ventasPendientes = Carrito::where('CRD_ESTADO', 'GUARDADO')
             ->with('cliente')->get();
 
-        return view('comprobantes.create', compact('ventasPendientes'));
+        $bodegas = Bodega::all(); // Nueva: Selección de bodega origen
+
+        return view('comprobantes.create', compact('ventasPendientes', 'bodegas'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'CRD_ID' => 'required|exists:CARRITO,CRD_ID',
+            'BOD_ID' => 'required|exists:BODEGA,BOD_ID', // Nueva validación
             'observaciones' => 'nullable|string|max:255',
         ]);
+
+
 
         // Validación de negocio: No facturar dos veces
         if (Comprobante::where('CRD_ID', $request->CRD_ID)->exists()) {
@@ -72,14 +80,29 @@ class ComprobanteController extends Controller
         DB::beginTransaction();
         try {
             $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
+            $bodega = Bodega::findOrFail($request->BOD_ID);
+            $transaccionSalida = Transaccion::where('TRA_CODIGO', 'SALIDA')->firstOrFail();
 
-            // Recálculo de seguridad (aunque ya debería estar en el carrito)
+            // Recálculo de seguridad
             $subtotal = 0;
             foreach ($carrito->detalles as $detalle) {
+                // Cálculo de subtotal con precio del detalle (snapshot)
                 $subtotal += ($detalle->DCA_CANTIDAD * $detalle->DCA_PRECIO_UNITARIO);
+
+                // VALIDACIÓN DE STOCK
+                $pivot = $bodega->productos()->where('PRODUCTO.PRO_ID', $detalle->PRO_ID)->first();
+                $stockActual = $pivot ? $pivot->pivot->BP_STOCK : 0;
+
+                if ($stockActual < $detalle->DCA_CANTIDAD) {
+                    throw new Exception("Stock insuficiente para el producto ID {$detalle->PRO_ID} en la bodega seleccionada.");
+                }
+
+                // DESCUENTO DE STOCK
+                $nuevoStock = $stockActual - $detalle->DCA_CANTIDAD;
+                $bodega->productos()->updateExistingPivot($detalle->PRO_ID, ['BP_STOCK' => $nuevoStock]);
             }
 
-            // IVA 15% (Según tu lógica actual)
+            // IVA 15%
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
@@ -90,6 +113,7 @@ class ComprobanteController extends Controller
             $comprobante = new Comprobante();
             $comprobante->CRD_ID = $carrito->CRD_ID;
             $comprobante->CLI_ID = $carrito->CLI_ID;
+            $comprobante->BOD_ID = $request->BOD_ID; // Guardar Bodega Origen
             $comprobante->COM_FECHA = now();
             $comprobante->COM_SUBTOTAL = $subtotal;
             $comprobante->COM_IVA = $iva;
@@ -98,18 +122,33 @@ class ComprobanteController extends Controller
             $comprobante->COM_ESTADO = 'EMITIDO';
             $comprobante->save();
 
-            // Actualizar estado del carrito para cerrar el ciclo
+            // INSERTAR KARDEX (SALIDA)
+            foreach ($carrito->detalles as $detalle) {
+                Kardex::create([
+                    'BOD_ID' => $request->BOD_ID,
+                    'PRO_ID' => $detalle->PRO_ID, // Usamos ID real para Kardex
+                    'TRA_ID' => $transaccionSalida->TRA_ID,
+                    'ORD_ID' => null,
+                    'COM_ID' => $comprobante->COM_ID,
+                    'KRD_FECHA' => now(),
+                    'KRD_CANTIDAD' => -1 * abs($detalle->DCA_CANTIDAD), // Negativo para salida
+                    'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
+                    'KRD_OBSERVACION' => 'Venta Factura #' . $comprobante->COM_ID
+                ]);
+            }
+
+            // Actualizar estado del carrito
             $carrito->CRD_ESTADO = 'FACTURADA';
             $carrito->save();
 
             DB::commit();
             return redirect()->route('comprobantes.show', $comprobante->COM_ID)
-                ->with('success', 'Factura emitida correctamente.');
+                ->with('success', 'Factura emitida correctamente y stock actualizado.');
 
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("Error emitiendo factura: " . $e->getMessage());
-            return back()->with('error', 'Error al emitir la factura. Por favor intente nuevamente.')->withInput();
+            return back()->with('error', 'Error al emitir factura: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -164,7 +203,7 @@ class ComprobanteController extends Controller
     public function anular(Request $request, $id)
     {
         try {
-            $comprobante = Comprobante::findOrFail($id);
+            $comprobante = Comprobante::with('carrito.detalles')->findOrFail($id);
 
             $request->validate([
                 'motivo_anulacion' => 'required|string|min:5|max:200'
@@ -172,24 +211,56 @@ class ComprobanteController extends Controller
 
             DB::beginTransaction();
 
+            if ($comprobante->COM_ESTADO === 'ANULADO') {
+                return back()->with('error', 'El comprobante ya está anulado.');
+            }
+
             // Cambio de Estado
             $comprobante->COM_ESTADO = 'ANULADO';
 
             // Registrar motivo en historial (append)
             $motivo = $request->input('motivo_anulacion');
             $comprobante->COM_OBSERVACIONES .= " | [ANULADO " . now()->format('d/m/Y') . "]: " . $motivo;
-
             $comprobante->save();
+
+            // REVERSO DE INVENTARIO (AJUSTE)
+            $transaccionAjuste = Transaccion::where('TRA_CODIGO', 'AJUSTE')->first();
+
+            if ($comprobante->BOD_ID) {
+                $bodega = Bodega::findOrFail($comprobante->BOD_ID);
+
+                foreach ($comprobante->carrito->detalles as $detalle) {
+                    // 1. Devolver Stock
+                    $pivot = $bodega->productos()->where('PRODUCTO.PRO_ID', $detalle->PRO_ID)->first();
+                    if ($pivot) {
+                        $nuevoStock = $pivot->pivot->BP_STOCK + $detalle->DCA_CANTIDAD;
+                        $bodega->productos()->updateExistingPivot($detalle->PRO_ID, ['BP_STOCK' => $nuevoStock]);
+                    }
+
+                    // 2. Insertar Kardex Ajuste
+                    Kardex::create([
+                        'BOD_ID' => $comprobante->BOD_ID,
+                        'PRO_ID' => $detalle->PRO_ID,
+                        'TRA_ID' => $transaccionAjuste->TRA_ID ?? 1,
+                        'ORD_ID' => null,
+                        'COM_ID' => $comprobante->COM_ID,
+                        'KRD_FECHA' => now(),
+                        'KRD_CANTIDAD' => $detalle->DCA_CANTIDAD, // Positivo (devolución)
+                        'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
+                        'KRD_OBSERVACION' => 'Anulación Factura #' . $comprobante->COM_ID
+                    ]);
+                }
+            }
 
             DB::commit();
 
             return redirect()->route('comprobantes.index')
-                ->with('success', 'Comprobante ANULADO correctamente.');
+                ->with('success', 'Comprobante ANULADO correctamente y stock restaurado.');
 
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("Error anulando comprobante ($id): " . $e->getMessage());
-            return back()->with('error', 'Error inesperado al anular el comprobante.');
+            return back()->with('error', 'Error inesperado al anular el comprobante: ' . $e->getMessage());
         }
     }
 }

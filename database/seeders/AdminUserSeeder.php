@@ -22,7 +22,7 @@ class AdminUserSeeder extends Seeder
                 'password' => Hash::make('admin123'), // Tu contraseña (cámbiala después)
                 // 'email_verified_at' => now(), // Descomenta si requieres verificación
             ]);
-            
+
             $this->command->info('¡Usuario Admin creado correctamente!');
         } else {
             $this->command->warn('El usuario Admin ya existe.');

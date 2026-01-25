@@ -6,14 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\OracleCompatible;
 
 class Proveedor extends Model
 {
-    use HasFactory;
+    use HasFactory, OracleCompatible;
 
     protected $table = 'PROVEEDOR';
     protected $primaryKey = 'PRV_ID';
     public $timestamps = true;
+
+
 
     protected $fillable = [
         'PRV_RUC',
@@ -32,19 +35,19 @@ class Proveedor extends Model
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
-            'PRV_RUC'      => 'required|string|size:13|unique:PROVEEDOR,PRV_RUC' . ($id ? ",$id,PRV_ID" : ''),
-            'PRV_NOMBRE'   => 'required|string|max:100',
+            'PRV_RUC' => 'required|string|size:13|unique:PROVEEDOR,PRV_RUC' . ($id ? ",$id,PRV_ID" : ''),
+            'PRV_NOMBRE' => 'required|string|max:100',
             'PRV_TELEFONO' => 'required|string|max:15',
-            'PRV_EMAIL'    => 'required|email|max:80',
-            'PRV_DIRECCION'=> 'required|string|max:100',
+            'PRV_EMAIL' => 'required|email|max:80',
+            'PRV_DIRECCION' => 'required|string|max:100',
             'PRV_PERSONA_CONTACTO' => 'nullable|string|max:80',
         ];
 
         $mensajes = [
             'PRV_RUC.required' => 'El RUC del proveedor es obligatorio',
-            'PRV_RUC.size'     => 'El RUC debe tener 13 dígitos',
-            'PRV_RUC.unique'   => 'Este RUC ya está registrado',
-            'PRV_EMAIL.email'  => 'El formato del correo no es válido',
+            'PRV_RUC.size' => 'El RUC debe tener 13 dígitos',
+            'PRV_RUC.unique' => 'Este RUC ya está registrado',
+            'PRV_EMAIL.email' => 'El formato del correo no es válido',
         ];
 
         $validator = Validator::make($datos, $reglas, $mensajes);
@@ -67,8 +70,8 @@ class Proveedor extends Model
     public static function buscarProveedor($criterio)
     {
         return self::where('PRV_RUC', 'LIKE', "%$criterio%")
-                   ->orWhere('PRV_NOMBRE', 'LIKE', "%$criterio%")
-                   ->get();
+            ->orWhere('PRV_NOMBRE', 'LIKE', "%$criterio%")
+            ->get();
     }
 
     public static function obtenerProveedor($id)

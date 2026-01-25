@@ -93,26 +93,28 @@ class HomeController extends Controller
             $total = $subtotal + $iva;
 
             $carritoBD = Carrito::create([
-                'CLI_ID'         => $cli_id, 
+                'CLI_ID' => $cli_id,
                 // CRD_FECHA_CREACION removido si usas timestamps estándar, 
                 // pero si tu migración final lo conservó, déjalo aquí.
                 // Basado en tu último modelo Carrito, usas timestamps false y CRD_FECHA_CREACION manual?
                 // Si aplicaste mi corrección de Carrito, esto debería ser automático (created_at).
                 // Pero lo dejo como lo tenías para evitar romper esa parte si no actualizaste el modelo.
                 'CRD_FECHA_CREACION' => now(),
-                'CRD_ESTADO'     => 'GUARDADO', 
-                'CRD_SUBTOTAL'   => $subtotal,
-                'CRD_IMPUESTO'   => $iva,
-                'CRD_TOTAL'      => $total
+                'CRD_ESTADO' => 'GUARDADO',
+                'CRD_SUBTOTAL' => $subtotal,
+                'CRD_IMPUESTO' => $iva,
+                'CRD_TOTAL' => $total
             ]);
 
             foreach ($cart as $id => $details) {
                 CarritoDetalle::create([
-                    'CRD_ID'              => $carritoBD->CRD_ID,
-                    'PRO_ID'              => $id,
-                    'DCA_CANTIDAD'        => $details['quantity'],
+                    'CRD_ID' => $carritoBD->CRD_ID,
+                    'PRO_ID' => $id,
+                    'PRO_CODIGO' => $details['code'] ?? 'N/A', // Snapshot
+                    'PRO_NOMBRE' => $details['name'],           // Snapshot
+                    'DCA_CANTIDAD' => $details['quantity'],
                     'DCA_PRECIO_UNITARIO' => $details['price'],
-                    'DCA_SUBTOTAL'        => $details['price'] * $details['quantity']
+                    'DCA_SUBTOTAL' => $details['price'] * $details['quantity']
                 ]);
             }
 
@@ -120,7 +122,7 @@ class HomeController extends Controller
             session()->forget('cart');
 
             return redirect()->route('shop.index')
-                             ->with('success', '¡Compra #' . $carritoBD->CRD_ID . ' realizada con éxito!');
+                ->with('success', '¡Compra #' . $carritoBD->CRD_ID . ' realizada con éxito!');
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -137,14 +139,15 @@ class HomeController extends Controller
         $producto = Producto::findOrFail($id);
         $cart = session()->get('cart', []);
 
-        if(isset($cart[$id])) {
+        if (isset($cart[$id])) {
             $cart[$id]['quantity']++;
         } else {
             $cart[$id] = [
                 "name" => $producto->PRO_NOMBRE,
+                "code" => $producto->PRO_CODIGO, // Snapshot Code
                 "quantity" => 1,
                 "price" => $producto->PRO_PRECIO,
-                "image" => "static/img/gorra_default.jpg" 
+                "image" => "static/img/gorra_default.jpg"
             ];
         }
 

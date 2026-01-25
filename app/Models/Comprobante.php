@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\OracleCompatible;
 
 class Comprobante extends Model
 {
-    use HasFactory;
+    use HasFactory, OracleCompatible;
 
     protected $table = 'COMPROBANTE';
     protected $primaryKey = 'COM_ID';
@@ -16,8 +17,9 @@ class Comprobante extends Model
     protected $fillable = [
         'CRD_ID',
         'CLI_ID',
+        'BOD_ID', // Bodega origen
         'COM_FECHA',
-        'COM_SUBTOTAL',     
+        'COM_SUBTOTAL',
         'COM_IVA',
         'COM_TOTAL',
         'COM_OBSERVACIONES',
@@ -38,6 +40,11 @@ class Comprobante extends Model
         return $this->belongsTo(Carrito::class, 'CRD_ID', 'CRD_ID');
     }
 
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class, 'BOD_ID', 'BOD_ID');
+    }
+
     /* =========================================================
        LOGICA DE NEGOCIO
        ========================================================= */
@@ -45,11 +52,11 @@ class Comprobante extends Model
     public static function buscarPorCriterio($criterio)
     {
         return self::where('COM_ID', $criterio)
-                   ->orWhereHas('cliente', function ($query) use ($criterio) {
-                       $query->where('CLI_CEDULA', 'LIKE', "%$criterio%");
-                   })
-                   ->with('cliente')
-                   ->orderBy('COM_ID', 'desc')
-                   ->get();
+            ->orWhereHas('cliente', function ($query) use ($criterio) {
+                $query->where('CLI_CEDULA', 'LIKE', "%$criterio%");
+            })
+            ->with('cliente')
+            ->orderBy('COM_ID', 'desc')
+            ->get();
     }
 }

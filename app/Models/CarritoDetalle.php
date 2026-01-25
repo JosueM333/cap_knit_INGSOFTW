@@ -4,18 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\OracleCompatible;
 
 class CarritoDetalle extends Model
 {
-    use HasFactory;
+    use HasFactory, OracleCompatible;
 
-    protected $table = 'DETALLE_CARRITO'; 
+    protected $table = 'DETALLE_CARRITO';
     protected $primaryKey = 'DCA_ID';
     public $timestamps = true;
 
     protected $fillable = [
         'CRD_ID',
         'PRO_ID',
+        'PRO_CODIGO', // Snapshot
+        'PRO_NOMBRE', // Snapshot
         'DCA_CANTIDAD',
         'DCA_PRECIO_UNITARIO',
         'DCA_SUBTOTAL'

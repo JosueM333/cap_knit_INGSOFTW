@@ -17,7 +17,7 @@ class CarritoController extends Controller
     {
         // CAMBIO: Ahora cargamos los datos directamente al entrar
         $carritosActivos = Carrito::obtenerCarritosActivos();
-        
+
         return view('carritos.index', compact('carritosActivos'));
     }
 
@@ -52,14 +52,14 @@ class CarritoController extends Controller
     public function buscarProducto(Request $request, $id)
     {
         $request->validate(['criterio' => 'required|string']);
-        
+
         $carrito = Carrito::with(['cliente', 'detalles.producto'])->findOrFail($id);
-        
+
         // Búsqueda de productos disponibles (sin filtros de columnas eliminadas)
         $productos = Producto::where(function ($q) use ($request) {
-                $q->where('PRO_CODIGO', 'like', "%{$request->criterio}%")
-                  ->orWhere('PRO_NOMBRE', 'like', "%{$request->criterio}%");
-            })->get();
+            $q->where('PRO_CODIGO', 'like', "%{$request->criterio}%")
+                ->orWhere('PRO_NOMBRE', 'like', "%{$request->criterio}%");
+        })->get();
 
         return view('carritos.edit', compact('carrito', 'productos'));
     }
@@ -67,7 +67,7 @@ class CarritoController extends Controller
     public function agregarProducto(Request $request, $id)
     {
         $request->validate([
-            'PRO_ID'       => 'required|exists:PRODUCTO,PRO_ID', 
+            'PRO_ID' => 'required|exists:PRODUCTO,PRO_ID',
             'DCA_CANTIDAD' => 'required|integer|min:1'
         ]);
 
@@ -77,9 +77,11 @@ class CarritoController extends Controller
         CarritoDetalle::updateOrCreate(
             ['CRD_ID' => $carrito->CRD_ID, 'PRO_ID' => $producto->PRO_ID],
             [
-                'DCA_CANTIDAD'        => $request->DCA_CANTIDAD,
+                'PRO_CODIGO' => $producto->PRO_CODIGO, // Snapshot
+                'PRO_NOMBRE' => $producto->PRO_NOMBRE, // Snapshot
+                'DCA_CANTIDAD' => $request->DCA_CANTIDAD,
                 'DCA_PRECIO_UNITARIO' => $producto->PRO_PRECIO,
-                'DCA_SUBTOTAL'        => $producto->PRO_PRECIO * $request->DCA_CANTIDAD
+                'DCA_SUBTOTAL' => $producto->PRO_PRECIO * $request->DCA_CANTIDAD
             ]
         );
 
@@ -108,9 +110,9 @@ class CarritoController extends Controller
     {
         $detalle = CarritoDetalle::findOrFail($idDetalle);
         $carritoId = $detalle->CRD_ID;
-        
+
         $detalle->delete();
-        
+
         $carrito = Carrito::findOrFail($carritoId);
         $this->recalcularTotales($carrito);
 
@@ -121,10 +123,10 @@ class CarritoController extends Controller
     public function vaciar($id)
     {
         $carrito = Carrito::findOrFail($id);
-        
+
         CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->delete();
         $this->recalcularTotales($carrito);
-        
+
         $carrito->CRD_ESTADO = 'VACIADO';
         $carrito->save();
 
@@ -135,11 +137,11 @@ class CarritoController extends Controller
     public function guardar($id)
     {
         $carrito = Carrito::with('detalles')->findOrFail($id);
-        
+
         if ($carrito->detalles->isEmpty()) {
             return redirect()->back()->with('error', 'No se puede guardar un carrito vacío');
         }
-        
+
         $carrito->CRD_ESTADO = 'GUARDADO';
         $carrito->save();
 
@@ -162,7 +164,7 @@ class CarritoController extends Controller
     {
         $request->validate(['criterio' => 'required|string']);
         $clientes = Cliente::where('CLI_CEDULA', 'like', "%{$request->criterio}%")
-                  ->orWhere('CLI_EMAIL', 'like', "%{$request->criterio}%")->get();
+            ->orWhere('CLI_EMAIL', 'like', "%{$request->criterio}%")->get();
 
         if ($clientes->isEmpty()) {
             return redirect()->route('carritos.index')->with('error', 'Cliente no encontrado');
@@ -177,18 +179,20 @@ class CarritoController extends Controller
     {
         $cliente = Cliente::findOrFail($id);
         $carrito = Carrito::where('CLI_ID', $cliente->CLI_ID)
-            ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO']) 
+            ->whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
             ->orderBy('CRD_ID', 'DESC')
             ->first();
 
         if (!$carrito) {
             $carrito = Carrito::create([
-                'CLI_ID' => $cliente->CLI_ID, 
+                'CLI_ID' => $cliente->CLI_ID,
                 // CRD_FECHA_CREACION se llena sola si usas timestamps o nullable
                 // Si la BDD la requiere obligatoria y no tienes timestamps, descomenta:
-                'CRD_FECHA_CREACION' => now(), 
+                'CRD_FECHA_CREACION' => now(),
                 'CRD_ESTADO' => 'ACTIVO',
-                'CRD_SUBTOTAL' => 0, 'CRD_IMPUESTO' => 0, 'CRD_TOTAL' => 0
+                'CRD_SUBTOTAL' => 0,
+                'CRD_IMPUESTO' => 0,
+                'CRD_TOTAL' => 0
             ]);
         }
         return redirect()->route('carritos.editar', $carrito->CRD_ID);

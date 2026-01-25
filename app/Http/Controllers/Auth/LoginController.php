@@ -40,7 +40,7 @@ class LoginController extends Controller
     {
         // Validación básica
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -51,13 +51,15 @@ class LoginController extends Controller
         | INTENTO 1: ADMIN (guard web)
         |--------------------------------------------------------------------------
         */
-        if (Auth::guard('web')->attempt(
-            [
-                'email'    => $request->email,
-                'password' => $request->password,
-            ],
-            $remember
-        )) {
+        if (
+            Auth::guard('web')->attempt(
+                [
+                    'email' => $request->email,
+                    'password' => $request->password,
+                ],
+                $remember
+            )
+        ) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('home'));
@@ -68,13 +70,15 @@ class LoginController extends Controller
         | INTENTO 2: CLIENTE (guard cliente)
         |--------------------------------------------------------------------------
         */
-        if (Auth::guard('cliente')->attempt(
-            [
-                'CLI_EMAIL' => $request->email,
-                'password'  => $request->password,
-            ],
-            $remember
-        )) {
+        if (
+            Auth::guard('cliente')->attempt(
+                [
+                    'CLI_EMAIL' => $request->email,
+                    'password' => $request->password,
+                ],
+                $remember
+            )
+        ) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('shop.index'));
