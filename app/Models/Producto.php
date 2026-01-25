@@ -81,17 +81,6 @@ class Producto extends Model
     {
         return DB::transaction(function () use ($datos) {
             $producto = self::create($datos);
-
-            // Asignar a la primera bodega por defecto con stock 0
-            $bodegaDefecto = Bodega::first();
-
-            if ($bodegaDefecto) {
-                $producto->bodegas()->attach($bodegaDefecto->BOD_ID, [
-                    'BP_STOCK' => 0,
-                    'BP_STOCK_MIN' => 5
-                ]);
-            }
-
             return $producto;
         });
     }

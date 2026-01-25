@@ -40,7 +40,7 @@ class ProductoController extends Controller
             Producto::guardarProducto($datos);
 
             return redirect()->route('productos.index')
-                ->with('success', 'Producto creado y asignado a bodega correctamente.');
+                ->with('success', 'Producto creado correctamente.');
 
         } catch (ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();

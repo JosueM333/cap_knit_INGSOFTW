@@ -16,10 +16,7 @@
                     <h4 class="mb-0 h5">Registrar Nuevo Producto</h4>
                 </div>
                 <div class="card-body p-4">
-                    <div class="alert alert-info small mb-4">
-                        <i class="bi bi-info-circle"></i> Al crear el producto, se asignará automáticamente a la Bodega
-                        Principal con stock 0.
-                    </div>
+
 
                     @if ($errors->any())
                         <div class="alert alert-danger">
