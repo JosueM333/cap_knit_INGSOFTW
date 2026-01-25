@@ -14,6 +14,10 @@ class Carrito extends Model
 
     protected $table = 'CARRITO';
     protected $primaryKey = 'CRD_ID';
+
+    protected $keyType = 'int';
+    public $incrementing = false;
+
     public $timestamps = true; // Usamos el estándar
 
     protected $fillable = [

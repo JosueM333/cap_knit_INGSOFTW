@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comprobante;
+use App\Models\DetalleComprobante; // Importado
 use App\Models\Carrito;
 use App\Models\Bodega;
 use App\Models\Kardex;
@@ -141,6 +142,19 @@ class ComprobanteController extends Controller
             $comprobante->COM_ESTADO = 'EMITIDO';
             $comprobante->save();
 
+            // 3.5) Crear DetalleComprobante (Snapshots)
+            foreach ($carrito->detalles as $detalle) {
+                DetalleComprobante::create([
+                    'COM_ID' => $comprobante->COM_ID,
+                    'PRO_ID' => $detalle->PRO_ID,
+                    'PRO_CODIGO_SNAP' => $detalle->PRO_CODIGO, // Snapshot Carrito -> Factura
+                    'PRO_NOMBRE_SNAP' => $detalle->PRO_NOMBRE, // Snapshot Carrito -> Factura
+                    'DCO_CANTIDAD' => $detalle->DCA_CANTIDAD,
+                    'DCO_PRECIO_UNITARIO' => $detalle->DCA_PRECIO_UNITARIO,
+                    'DCO_SUBTOTAL' => $detalle->DCA_SUBTOTAL,
+                ]);
+            }
+
             // 4) Kardex (Salida)
             foreach ($carrito->detalles as $detalle) {
                 Kardex::create([
@@ -176,10 +190,11 @@ class ComprobanteController extends Controller
     }
 
     // --- F5.1 Ver Detalle ---
+    // --- F5.1 Ver Detalle ---
     public function show($id)
     {
-        // Con snapshot no necesitas depender de producto
-        $comprobante = Comprobante::with(['cliente', 'carrito.detalles'])->findOrFail($id);
+        // Con snapshot no necesitas depender de producto. Usamos 'detalles' (DETALLE_COMPROBANTE)
+        $comprobante = Comprobante::with(['cliente', 'detalles'])->findOrFail($id);
         return view('comprobantes.show', compact('comprobante'));
     }
 

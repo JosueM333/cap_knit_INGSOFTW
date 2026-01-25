@@ -150,7 +150,8 @@ class OrdenCompraController extends Controller
             foreach ($orden->detalles as $detalle) {
                 // Actualizar/Crear Stock en BodegaProducto Pivot
                 $bodega = Bodega::findOrFail($request->BOD_ID);
-                $pivot = $bodega->productos()->where('PRODUCTO.PRO_ID', $detalle->PRO_ID)->first();
+                // Usamos find() para evitar ambigüedades en la consulta pivot
+                $pivot = $bodega->productos()->find($detalle->PRO_ID);
 
                 if ($pivot) {
                     $nuevoStock = $pivot->pivot->BP_STOCK + $detalle->DOR_CANTIDAD;

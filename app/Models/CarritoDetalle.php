@@ -12,6 +12,10 @@ class CarritoDetalle extends Model
 
     protected $table = 'DETALLE_CARRITO';
     protected $primaryKey = 'DCA_ID';
+
+    protected $keyType = 'int';
+    public $incrementing = false;
+
     public $timestamps = true;
 
     protected $fillable = [

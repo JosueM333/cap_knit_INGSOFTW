@@ -12,6 +12,9 @@ class Comprobante extends Model
 
     protected $table = 'COMPROBANTE';
     protected $primaryKey = 'COM_ID';
+
+    protected $keyType = 'int';
+    public $incrementing = false;
     public $timestamps = true; // Estándar
 
     protected $fillable = [
@@ -43,6 +46,11 @@ class Comprobante extends Model
     public function bodega()
     {
         return $this->belongsTo(Bodega::class, 'BOD_ID', 'BOD_ID');
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(DetalleComprobante::class, 'COM_ID', 'COM_ID');
     }
 
     /* =========================================================

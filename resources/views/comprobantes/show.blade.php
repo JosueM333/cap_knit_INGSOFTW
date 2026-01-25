@@ -45,7 +45,8 @@
                     <h5 class="fw-bold bg-light p-2 border">Datos del Cliente</h5>
                     <div class="px-2">
                         <p class="mb-1"><strong>Razón Social:</strong> {{ $comprobante->cliente->CLI_NOMBRES }}
-                            {{ $comprobante->cliente->CLI_APELLIDOS }}</p>
+                            {{ $comprobante->cliente->CLI_APELLIDOS }}
+                        </p>
                         <p class="mb-1"><strong>Cédula/RUC:</strong> {{ $comprobante->cliente->CLI_CEDULA }}</p>
                         <p class="mb-1"><strong>Dirección:</strong> {{ $comprobante->cliente->CLI_DIRECCION }}</p>
                         <p class="mb-1"><strong>Teléfono:</strong> {{ $comprobante->cliente->CLI_TELEFONO }}</p>
@@ -64,16 +65,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($comprobante->carrito->detalles as $detalle)
+                        @foreach($comprobante->detalles as $detalle)
                             <tr>
-                                <td class="text-center">{{ $detalle->DCA_CANTIDAD }}</td>
+                                <td class="text-center">{{ $detalle->DCO_CANTIDAD }}</td>
                                 <td>
-                                    {{ $detalle->producto->PRO_NOMBRE }}
-                                    <br><small class="text-muted">Código: {{ $detalle->producto->PRO_CODIGO }}</small>
+                                    {{ $detalle->PRO_NOMBRE_SNAP }}
+                                    <br><small class="text-muted">Código: {{ $detalle->PRO_CODIGO_SNAP }}</small>
                                 </td>
-                                <td class="text-end">${{ number_format($detalle->DCA_PRECIO_UNITARIO, 2) }}</td>
+                                <td class="text-end">${{ number_format($detalle->DCO_PRECIO_UNITARIO, 2) }}</td>
                                 <td class="text-end">
-                                    ${{ number_format($detalle->DCA_CANTIDAD * $detalle->DCA_PRECIO_UNITARIO, 2) }}</td>
+                                    ${{ number_format($detalle->DCO_SUBTOTAL, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
