@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +15,7 @@ class Cliente extends Authenticatable
 
     protected $table = 'CLIENTE';
     protected $primaryKey = 'CLI_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'CLI_NOMBRES',
@@ -56,13 +56,13 @@ class Cliente extends Authenticatable
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
-            'CLI_NOMBRES'   => 'required|string|max:80',
+            'CLI_NOMBRES' => 'required|string|max:80',
             'CLI_APELLIDOS' => 'required|string|max:80',
-            'CLI_CEDULA'    => 'required|string|size:10|unique:CLIENTE,CLI_CEDULA' . ($id ? ",$id,CLI_ID" : ''),
-            'CLI_EMAIL'     => 'required|email|max:80|unique:CLIENTE,CLI_EMAIL' . ($id ? ",$id,CLI_ID" : ''),
-            'CLI_TELEFONO'  => 'required|string|max:15',
+            'CLI_CEDULA' => 'required|string|size:10|unique:CLIENTE,CLI_CEDULA' . ($id ? ",$id,CLI_ID" : ''),
+            'CLI_EMAIL' => 'required|email|max:80|unique:CLIENTE,CLI_EMAIL' . ($id ? ",$id,CLI_ID" : ''),
+            'CLI_TELEFONO' => 'required|string|max:15',
             'CLI_DIRECCION' => 'required|string|max:100',
-            'CLI_PASSWORD'  => $id ? 'nullable|string|min:6' : 'required|string|min:6',
+            'CLI_PASSWORD' => $id ? 'nullable|string|min:6' : 'required|string|min:6',
         ];
 
         $mensajes = [
@@ -92,9 +92,9 @@ class Cliente extends Authenticatable
     public static function buscarCliente($criterio)
     {
         return self::where('CLI_CEDULA', 'LIKE', "%$criterio%")
-                    ->orWhere('CLI_EMAIL', 'LIKE', "%$criterio%")
-                    ->orWhere('CLI_APELLIDOS', 'LIKE', "%$criterio%")
-                    ->get();
+            ->orWhere('CLI_EMAIL', 'LIKE', "%$criterio%")
+            ->orWhere('CLI_APELLIDOS', 'LIKE', "%$criterio%")
+            ->get();
     }
 
     public function actualizarCliente(array $datos)

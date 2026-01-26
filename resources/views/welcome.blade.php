@@ -14,23 +14,19 @@
 
 <body>
 
-    <a href="#main-content" class="skip-link">
-        Saltar al contenido principal
-    </a>
-
-    <header class="u-bg-gray border-bottom border-2 sticky-top py-3 shadow-sm" role="banner">
+    <header class="u-bg-gray border-bottom border-2 py-3" role="banner">
         <div class="container d-flex justify-content-between align-items-center">
 
             <a href="{{ route('shop.index') }}"
-                class="text-dark text-decoration-none fw-bold fs-4 d-flex align-items-center">
-                <span class="logo-text">CAP & KNIT</span>
+                class="text-white text-decoration-none fw-bold fs-4 d-flex align-items-center">
+                <span class="logo-text text-white">CAP & KNIT</span>
             </a>
 
             <nav aria-label="Navegación principal">
                 <ul class="d-flex gap-4 list-unstyled text-uppercase small mb-0 align-items-center fw-bold">
                     <li>
                         <a href="{{ route('shop.products') }}"
-                            class="text-dark text-decoration-none border-bottom border-dark border-2 pb-1">
+                            class="text-white text-decoration-none border-bottom border-light border-2 pb-1">
                             Productos
                         </a>
                     </li>
@@ -38,8 +34,8 @@
                     {{-- 1. SI ES ADMINISTRADOR --}}
                     @auth('web')
                         <li class="dropdown">
-                            <a href="#" class="btn btn-dark btn-sm fw-bold dropdown-toggle" data-bs-toggle="dropdown"
-                                aria-expanded="false">
+                            <a href="#" class="btn btn-outline-light btn-sm fw-bold dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-badge-fill" aria-hidden="true"></i> Admin
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
@@ -66,8 +62,8 @@
                     {{-- 2. SI ES CLIENTE --}}
                     @auth('cliente')
                         <li class="dropdown">
-                            <a href="#" class="btn btn-dark btn-sm fw-bold dropdown-toggle" data-bs-toggle="dropdown"
-                                aria-expanded="false">
+                            <a href="#" class="btn btn-outline-light btn-sm fw-bold dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-fill" aria-hidden="true"></i>
                                 Hola, {{ Auth::guard('cliente')->user()->CLI_NOMBRES }}
                             </a>
@@ -99,15 +95,15 @@
                     {{-- 3. SI NO HAY NADIE CONECTADO (NI WEB NI CLIENTE) --}}
                     @if(!Auth::guard('web')->check() && !Auth::guard('cliente')->check())
                         <li>
-                            <a href="{{ route('login') }}" class="btn btn-outline-dark btn-sm fw-bold">
+                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm fw-bold">
                                 <i class="bi bi-person" aria-hidden="true"></i> Iniciar sesión
                             </a>
                         </li>
                     @endif
 
                     <li>
-                        <a href="{{ route('shop.cart') }}" class="text-dark text-decoration-none"
-                            aria-label="Ver carrito de compras">
+                        <a href="{{ route('shop.cart') }}" class="text-white text-decoration-none"
+                            aria-label="Ver carrito de compras" data-bs-toggle="tooltip" title="Ver Carrito">
                             <i class="bi bi-cart-fill fs-5" aria-hidden="true"></i>
                             Carrito (<span id="cart-count">0</span>)
                         </a>
@@ -143,11 +139,11 @@
 
     <footer class="u-bg-gray border-top border-2 py-5" role="contentinfo">
         <div class="container text-center text-md-start">
-            <p class="mb-0 fw-bold">
+            <p class="mb-0 fw-bold text-white">
                 &copy; {{ date('Y') }} Cap & Knit. Todos los derechos reservados.
             </p>
             <p class="small text-muted mt-2 contrast-text">
-                <a href="#main-content" class="text-dark fw-bold text-decoration-none">
+                <a href="#main-content" class="text-white fw-bold text-decoration-none">
                     Volver arriba ↑
                 </a>
             </p>
@@ -200,7 +196,15 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('accessibility.js') }}"></script>
-
+    <script>
+        // Inicializar tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        });
+    </script>
 </body>
 
 </html>

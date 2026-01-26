@@ -13,7 +13,7 @@ class Bodega extends Model
 
     protected $table = 'BODEGA';
     protected $primaryKey = 'BOD_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'BOD_NOMBRE',
@@ -29,14 +29,14 @@ class Bodega extends Model
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
-            'BOD_NOMBRE'    => 'required|string|max:80|unique:BODEGA,BOD_NOMBRE' . ($id ? ",$id,BOD_ID" : ''),
+            'BOD_NOMBRE' => 'required|string|max:80|unique:BODEGA,BOD_NOMBRE' . ($id ? ",$id,BOD_ID" : ''),
             'BOD_UBICACION' => 'required|string|max:100',
             'BOD_DESCRIPCION' => 'nullable|string|max:200',
         ];
 
         $mensajes = [
             'BOD_NOMBRE.required' => 'El nombre de la bodega es obligatorio',
-            'BOD_NOMBRE.unique'   => 'Ya existe una bodega con este nombre',
+            'BOD_NOMBRE.unique' => 'Ya existe una bodega con este nombre',
             'BOD_UBICACION.required' => 'La ubicación es obligatoria',
         ];
 
@@ -60,8 +60,8 @@ class Bodega extends Model
     public static function buscarBodega($criterio)
     {
         return self::where('BOD_NOMBRE', 'LIKE', "%$criterio%")
-                   ->orWhere('BOD_UBICACION', 'LIKE', "%$criterio%")
-                   ->get();
+            ->orWhere('BOD_UBICACION', 'LIKE', "%$criterio%")
+            ->get();
     }
 
     public static function obtenerBodega($id)

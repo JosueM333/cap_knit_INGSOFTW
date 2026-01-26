@@ -104,6 +104,36 @@
                                     </div>
                                 </div>
 
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="CLI_CEDULA" class="form-label fw-bold">
+                                            Cédula / RUC <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="text" id="CLI_CEDULA" name="CLI_CEDULA"
+                                            class="form-control @error('CLI_CEDULA') is-invalid @enderror"
+                                            value="{{ old('CLI_CEDULA') }}" required placeholder="Ej: 1712345678">
+                                        @error('CLI_CEDULA')
+                                            <span class="invalid-feedback fw-bold" role="alert">
+                                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="CLI_TELEFONO" class="form-label fw-bold">
+                                            Teléfono / Celular <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="text" id="CLI_TELEFONO" name="CLI_TELEFONO"
+                                            class="form-control @error('CLI_TELEFONO') is-invalid @enderror"
+                                            value="{{ old('CLI_TELEFONO') }}" required placeholder="Ej: 0991234567">
+                                        @error('CLI_TELEFONO')
+                                            <span class="invalid-feedback fw-bold" role="alert">
+                                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
                                     <label for="CLI_EMAIL" class="form-label fw-bold">
                                         Correo electrónico <span class="text-danger" aria-hidden="true">*</span>
@@ -130,7 +160,8 @@
 
                                         <button type="button" class="toggle-password text-decoration-underline"
                                             onclick="togglePasswordVisibility('password', this)"
-                                            aria-label="Mostrar contraseña">
+                                            aria-label="Mostrar contraseña" data-bs-toggle="tooltip"
+                                            title="Mostrar/Ocultar contraseña">
                                             Mostrar
                                         </button>
                                     </div>
@@ -152,7 +183,8 @@
 
                                         <button type="button" class="toggle-password text-decoration-underline"
                                             onclick="togglePasswordVisibility('password-confirm', this)"
-                                            aria-label="Mostrar contraseña">
+                                            aria-label="Mostrar contraseña" data-bs-toggle="tooltip"
+                                            title="Mostrar/Ocultar contraseña">
                                             Mostrar
                                         </button>
                                     </div>
@@ -171,7 +203,8 @@
 
                                 <div class="mt-4">
                                     <a href="{{ route('shop.index') }}"
-                                        class="text-decoration-none small text-muted fw-bold link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                                        class="text-decoration-none small text-muted fw-bold link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                        data-bs-toggle="tooltip" title="Regresar al catálogo principal">
                                         <i class="bi bi-arrow-left"></i> Volver a la tienda
                                     </a>
                                 </div>
@@ -222,7 +255,8 @@
         </div>
 
         <button id="access-btn" class="btn btn-dark rounded-circle shadow-lg p-3 mt-2"
-            aria-label="Abrir menú de accesibilidad" aria-expanded="false" aria-controls="access-menu">
+            aria-label="Abrir menú de accesibilidad" aria-expanded="false" aria-controls="access-menu"
+            data-bs-toggle="tooltip" title="Opciones de Accesibilidad">
             <i class="bi bi-universal-access-circle fs-2"></i>
         </button>
     </div>
@@ -232,6 +266,14 @@
     <script src="{{ asset('accessibility.js') }}"></script>
 
     <script>
+        // Inicializar tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        });
+
         function togglePasswordVisibility(inputId, btn) {
             const input = document.getElementById(inputId);
 

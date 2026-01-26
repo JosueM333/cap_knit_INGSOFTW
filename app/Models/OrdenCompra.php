@@ -11,7 +11,7 @@ class OrdenCompra extends Model
 {
     protected $table = 'ORDEN_COMPRA';
     protected $primaryKey = 'ORD_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'PRV_ID',
@@ -37,10 +37,10 @@ class OrdenCompra extends Model
     {
         $reglas = [
             'PRV_ID' => 'required|exists:PROVEEDOR,PRV_ID',
-            'detalles' => 'required|array|min:1', 
-            'detalles.*.PRO_ID'   => 'required|exists:PRODUCTO,PRO_ID',
+            'detalles' => 'required|array|min:1',
+            'detalles.*.PRO_ID' => 'required|exists:PRODUCTO,PRO_ID',
             'detalles.*.CANTIDAD' => 'required|integer|min:1',
-            'detalles.*.PRECIO'   => 'required|numeric|min:0.01',
+            'detalles.*.PRECIO' => 'required|numeric|min:0.01',
         ];
 
         $mensajes = [
@@ -59,10 +59,10 @@ class OrdenCompra extends Model
     {
         return DB::transaction(function () use ($datos) {
             $orden = self::create([
-                'PRV_ID'     => $datos['PRV_ID'],
-                'ORD_FECHA'  => now(),
-                'ORD_TOTAL'  => 0,
-                'ORD_ESTADO' => 'PENDIENTE', 
+                'PRV_ID' => $datos['PRV_ID'],
+                'ORD_FECHA' => now(),
+                'ORD_TOTAL' => 0,
+                'ORD_ESTADO' => 'PENDIENTE',
             ]);
 
             $totalGlobal = 0;
@@ -72,10 +72,10 @@ class OrdenCompra extends Model
                 $totalGlobal += $subtotal;
 
                 DetalleOrden::create([
-                    'ORD_ID'       => $orden->ORD_ID,
-                    'PRO_ID'       => $item['PRO_ID'],
+                    'ORD_ID' => $orden->ORD_ID,
+                    'PRO_ID' => $item['PRO_ID'],
                     'DOR_CANTIDAD' => $item['CANTIDAD'],
-                    'DOR_PRECIO'   => $item['PRECIO'],
+                    'DOR_PRECIO' => $item['PRECIO'],
                     'DOR_SUBTOTAL' => $subtotal
                 ]);
             }
@@ -89,7 +89,7 @@ class OrdenCompra extends Model
     {
         return self::with('proveedor')
             ->where('ORD_ID', $criterio)
-            ->orWhereHas('proveedor', function($q) use ($criterio) {
+            ->orWhereHas('proveedor', function ($q) use ($criterio) {
                 $q->where('PRV_NOMBRE', 'LIKE', "%$criterio%");
             })
             ->orderBy('ORD_ID', 'desc')
@@ -110,12 +110,12 @@ class OrdenCompra extends Model
             foreach ($datos['detalles'] as $item) {
                 $subtotal = $item['CANTIDAD'] * $item['PRECIO'];
                 $totalGlobal += $subtotal;
-                
+
                 DetalleOrden::create([
-                    'ORD_ID'       => $this->ORD_ID,
-                    'PRO_ID'       => $item['PRO_ID'],
+                    'ORD_ID' => $this->ORD_ID,
+                    'PRO_ID' => $item['PRO_ID'],
                     'DOR_CANTIDAD' => $item['CANTIDAD'],
-                    'DOR_PRECIO'   => $item['PRECIO'],
+                    'DOR_PRECIO' => $item['PRECIO'],
                     'DOR_SUBTOTAL' => $subtotal
                 ]);
             }

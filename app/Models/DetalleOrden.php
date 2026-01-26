@@ -11,10 +11,10 @@ class DetalleOrden extends Model
 
     protected $table = 'DETALLE_ORDEN';
     protected $primaryKey = 'DOR_ID';
-    
+
     // Al dejar esto en true sin definir constantes, Laravel usará 'created_at' y 'updated_at'
     // lo cual coincide perfectamente con tu migración corregida.
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'ORD_ID',

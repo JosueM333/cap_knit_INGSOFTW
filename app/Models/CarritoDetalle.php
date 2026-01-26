@@ -9,9 +9,9 @@ class CarritoDetalle extends Model
 {
     use HasFactory;
 
-    protected $table = 'DETALLE_CARRITO'; 
+    protected $table = 'DETALLE_CARRITO';
     protected $primaryKey = 'DCA_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'CRD_ID',

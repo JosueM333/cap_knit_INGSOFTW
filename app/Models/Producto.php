@@ -14,7 +14,7 @@ class Producto extends Model
 
     protected $table = 'PRODUCTO';
     protected $primaryKey = 'PRO_ID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'PRV_ID',
@@ -40,8 +40,8 @@ class Producto extends Model
     public function bodegas()
     {
         return $this->belongsToMany(Bodega::class, 'BODEGA_PRODUCTO', 'PRO_ID', 'BOD_ID')
-                    ->withPivot('BP_STOCK', 'BP_STOCK_MIN')
-                    ->withTimestamps(); // Maneja automáticamente los timestamps de la pivote
+            ->withPivot('BP_STOCK', 'BP_STOCK_MIN')
+            ->withTimestamps(); // Maneja automáticamente los timestamps de la pivote
     }
 
     /* =========================================================
@@ -51,15 +51,15 @@ class Producto extends Model
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
-            'PRV_ID'          => 'required|exists:PROVEEDOR,PRV_ID',
-            'PRO_CODIGO'      => 'required|string|max:20|unique:PRODUCTO,PRO_CODIGO' . ($id ? ",$id,PRO_ID" : ''),
-            'PRO_NOMBRE'      => 'required|string|max:100',
+            'PRV_ID' => 'required|exists:PROVEEDOR,PRV_ID',
+            'PRO_CODIGO' => 'required|string|max:20|unique:PRODUCTO,PRO_CODIGO' . ($id ? ",$id,PRO_ID" : ''),
+            'PRO_NOMBRE' => 'required|string|max:100',
             'PRO_DESCRIPCION' => 'required|string|max:500',
-            'PRO_PRECIO'      => 'required|numeric|min:0.01',
-            'PRO_MARCA'       => 'nullable|string|max:50',
-            'PRO_COLOR'       => 'nullable|string|max:30',
+            'PRO_PRECIO' => 'required|numeric|min:0.01',
+            'PRO_MARCA' => 'nullable|string|max:50',
+            'PRO_COLOR' => 'nullable|string|max:30',
             // Agregado para consistencia (estaba en fillable pero no validado)
-            'PRO_TALLA'       => 'nullable|string|max:10',
+            'PRO_TALLA' => 'nullable|string|max:10',
         ];
 
         $mensajes = [
@@ -82,7 +82,7 @@ class Producto extends Model
 
             // Asignar a la primera bodega por defecto con stock 0
             $bodegaDefecto = Bodega::first();
-            
+
             if ($bodegaDefecto) {
                 $producto->bodegas()->attach($bodegaDefecto->BOD_ID, [
                     'BP_STOCK' => 0,
@@ -102,9 +102,9 @@ class Producto extends Model
     public static function buscarProducto($criterio)
     {
         return self::with('proveedor')
-                   ->where('PRO_CODIGO', 'LIKE', "%$criterio%")
-                   ->orWhere('PRO_NOMBRE', 'LIKE', "%$criterio%")
-                   ->get();
+            ->where('PRO_CODIGO', 'LIKE', "%$criterio%")
+            ->orWhere('PRO_NOMBRE', 'LIKE', "%$criterio%")
+            ->get();
     }
 
     public static function obtenerProducto($id)

@@ -11,13 +11,13 @@ class Comprobante extends Model
 
     protected $table = 'COMPROBANTE';
     protected $primaryKey = 'COM_ID';
-    public $timestamps = true; // Estándar
+    public $timestamps = false;
 
     protected $fillable = [
         'CRD_ID',
         'CLI_ID',
         'COM_FECHA',
-        'COM_SUBTOTAL',     
+        'COM_SUBTOTAL',
         'COM_IVA',
         'COM_TOTAL',
         'COM_OBSERVACIONES',
@@ -45,11 +45,11 @@ class Comprobante extends Model
     public static function buscarPorCriterio($criterio)
     {
         return self::where('COM_ID', $criterio)
-                   ->orWhereHas('cliente', function ($query) use ($criterio) {
-                       $query->where('CLI_CEDULA', 'LIKE', "%$criterio%");
-                   })
-                   ->with('cliente')
-                   ->orderBy('COM_ID', 'desc')
-                   ->get();
+            ->orWhereHas('cliente', function ($query) use ($criterio) {
+                $query->where('CLI_CEDULA', 'LIKE', "%$criterio%");
+            })
+            ->with('cliente')
+            ->orderBy('COM_ID', 'desc')
+            ->get();
     }
 }

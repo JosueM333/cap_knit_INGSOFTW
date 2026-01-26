@@ -56,8 +56,9 @@
                     @forelse($productos as $prod)
                         <tr>
                             <td class="text-center">
-                                <img src="{{ asset('static/img/gorra_default.jpg') }}" alt="Thumb" class="img-thumbnail"
-                                    width="50" height="50">
+                                <img src="{{ asset('img/productos/' . $prod->PRO_CODIGO . '.jpg') }}" alt="Thumb"
+                                    class="img-thumbnail" width="50" height="50"
+                                    onerror="this.onerror=null; this.src='{{ asset('img/productos/gorranewera.jpg') }}';">
                             </td>
                             <td class="font-monospace">{{ $prod->PRO_CODIGO }}</td>
                             <td>
