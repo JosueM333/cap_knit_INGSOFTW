@@ -198,7 +198,7 @@ class ComprobanteController extends Controller
 
             // 6) Limpiar DETALLE_CARRITO (Requisito: eliminar detalle físico tras facturar)
             // Se asume que los datos ya viven en DETALLE_COMPROBANTE
-            CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->delete();
+            //CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->delete();
 
             DB::commit();
 
