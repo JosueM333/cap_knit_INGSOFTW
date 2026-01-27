@@ -17,12 +17,9 @@ return new class extends Migration {
             $table->unsignedBigInteger('COM_ID');
             $table->foreign('COM_ID')->references('COM_ID')->on('COMPROBANTE')->onDelete('cascade');
 
-            // PRODUCTO (Sin FK, solo referencia)
+            // Relación con PRODUCTO
             $table->unsignedBigInteger('PRO_ID');
-
-            // Snapshots del Producto
-            $table->string('PRO_CODIGO_SNAP', 20);
-            $table->string('PRO_NOMBRE_SNAP', 100);
+            $table->foreign('PRO_ID')->references('PRO_ID')->on('PRODUCTO');
 
             // Valores monetarios y cantidades
             $table->integer('DCO_CANTIDAD');

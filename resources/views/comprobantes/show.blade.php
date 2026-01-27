@@ -69,8 +69,8 @@
                             <tr>
                                 <td class="text-center">{{ $detalle->DCO_CANTIDAD }}</td>
                                 <td>
-                                    {{ $detalle->PRO_NOMBRE_SNAP }}
-                                    <br><small class="text-muted">Código: {{ $detalle->PRO_CODIGO_SNAP }}</small>
+                                    {{ $detalle->producto->PRO_NOMBRE }}
+                                    <br><small class="text-muted">Código: {{ $detalle->producto->PRO_CODIGO }}</small>
                                 </td>
                                 <td class="text-end">${{ number_format($detalle->DCO_PRECIO_UNITARIO, 2) }}</td>
                                 <td class="text-end">

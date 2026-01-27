@@ -13,8 +13,6 @@ class Comprobante extends Model
     protected $table = 'COMPROBANTE';
     protected $primaryKey = 'COM_ID';
 
-    protected $keyType = 'int';
-    public $incrementing = false;
     public $timestamps = true; // Estándar
 
     protected $fillable = [

@@ -13,16 +13,11 @@ class CarritoDetalle extends Model
     protected $table = 'DETALLE_CARRITO';
     protected $primaryKey = 'DCA_ID';
 
-    protected $keyType = 'int';
-    public $incrementing = false;
-
     public $timestamps = true;
 
     protected $fillable = [
         'CRD_ID',
         'PRO_ID',
-        'PRO_CODIGO', // Snapshot
-        'PRO_NOMBRE', // Snapshot
         'DCA_CANTIDAD',
         'DCA_PRECIO_UNITARIO',
         'DCA_SUBTOTAL'

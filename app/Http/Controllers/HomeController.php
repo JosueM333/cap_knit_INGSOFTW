@@ -93,36 +93,25 @@ class HomeController extends Controller
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
-            // 1) Obtener CRD_ID desde SEQUENCE (sin RETURNING, funciona con DBLINK + sinónimo)
-            $nextCarrito = DB::selectOne('SELECT CARRITO_SEQ.NEXTVAL AS ID FROM DUAL');
-            $carritoId = (int) $nextCarrito->id;
-
-            // 2) Insertar cabecera CARRITO (NO uses CRD_FECHA_CREACION si tu tabla ya no la tiene)
+            // 1) Insertar cabecera CARRITO
             $carritoBD = new Carrito();
-            $carritoBD->CRD_ID = $carritoId;
             $carritoBD->CLI_ID = $cli_id;
             $carritoBD->CRD_ESTADO = 'GUARDADO';
             $carritoBD->CRD_SUBTOTAL = $subtotal;
             $carritoBD->CRD_IMPUESTO = $iva;
             $carritoBD->CRD_TOTAL = $total;
+            // $carritoBD->CRD_ID se genera auto
             $carritoBD->save();
 
             // 3) Insertar detalle DETALLE_CARRITO
             foreach ($cart as $proId => $details) {
 
-                // Si DETALLE_CARRITO vive en BD2 por DBLINK, evita RETURNING también:
-                $nextDetalle = DB::selectOne('SELECT DETALLE_CARRITO_SEQ.NEXTVAL AS ID FROM DUAL');
-                $detalleId = (int) $nextDetalle->id;
-
                 $detalle = new CarritoDetalle();
-                $detalle->DCA_ID = $detalleId;
-                $detalle->CRD_ID = $carritoId;
+                // $detalle->DCA_ID = ... auto
+                $detalle->CRD_ID = $carritoBD->CRD_ID;
                 $detalle->PRO_ID = (int) $proId;
 
-                // Snapshots
-                $detalle->PRO_CODIGO = $details['code'] ?? 'N/A';
-                $detalle->PRO_NOMBRE = $details['name'];
-
+                // Snapshots ELIMINADOS
                 $detalle->DCA_CANTIDAD = (int) $details['quantity'];
                 $detalle->DCA_PRECIO_UNITARIO = (float) $details['price'];
                 $detalle->DCA_SUBTOTAL = ((float) $details['price']) * ((int) $details['quantity']);
@@ -134,7 +123,7 @@ class HomeController extends Controller
             session()->forget('cart');
 
             return redirect()->route('shop.index')
-                ->with('success', '¡Compra #' . $carritoId . ' realizada con éxito!');
+                ->with('success', '¡Compra #' . $carritoBD->CRD_ID . ' realizada con éxito!');
 
         } catch (Exception $e) {
             DB::rollBack();

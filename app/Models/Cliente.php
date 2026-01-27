@@ -17,9 +17,6 @@ class Cliente extends Authenticatable
     protected $table = 'CLIENTE';
     protected $primaryKey = 'CLI_ID';
 
-    protected $keyType = 'int';
-    public $incrementing = false;
-
     public $timestamps = true;
 
 

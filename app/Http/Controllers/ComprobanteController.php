@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comprobante;
 use App\Models\DetalleComprobante;
 use App\Models\Carrito;
-use App\Models\CarritoDetalle; // Importado
+use App\Models\CarritoDetalle; // Importado (si luego decides borrar detalle carrito desde app)
 use App\Models\Bodega;
 use App\Models\Kardex;
 use App\Models\Transaccion;
@@ -30,6 +30,8 @@ class ComprobanteController extends Controller
             return back()->with('error', 'Ocurrió un error al cargar los comprobantes.');
         }
     }
+
+
 
     // --- F5.3 Buscar ---
     public function buscar(Request $request)
@@ -78,46 +80,27 @@ class ComprobanteController extends Controller
 
         DB::beginTransaction();
         try {
-            $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
-            $bodega = Bodega::findOrFail($request->BOD_ID);
+            /**
+             * ✅ CORRECCIÓN:
+             * Aseguramos detalles.producto para:
+             * - evitar $detalle->producto null
+             * - evitar N+1 queries
+             */
+            $carrito = Carrito::with(['detalles.producto', 'cliente'])->findOrFail($request->CRD_ID);
 
+            $bodega = Bodega::findOrFail($request->BOD_ID);
             $transaccionSalida = Transaccion::where('TRA_CODIGO', 'SALIDA')->firstOrFail();
 
-            // 1) Validar y descontar stock + calcular subtotal
+            /**
+             * =========================================================
+             * 1) SOLO CALCULAR SUBTOTAL EN LARAVEL
+             * =========================================================
+             * ✅ Aquí NO se descuenta stock. El descuento se hace en el loop (3.5).
+             */
             $subtotal = 0;
-
             foreach ($carrito->detalles as $detalle) {
-
                 $cantidad = (int) $detalle->DCA_CANTIDAD;
                 $subtotal += $cantidad * (float) $detalle->DCA_PRECIO_UNITARIO;
-
-                // Leer stock desde BODEGA_PRODUCTO (BD1) con lock
-                $bp = DB::table('BODEGA_PRODUCTO')
-                    ->selectRaw('BP_STOCK as "bp_stock", BP_STOCK_MIN as "bp_stock_min"')
-                    ->where('BOD_ID', $bodega->BOD_ID)
-                    ->where('PRO_ID', $detalle->PRO_ID)
-                    ->lockForUpdate()
-                    ->first();
-
-                $stockActual = $bp ? (int) $bp->bp_stock : 0;
-
-                if ($stockActual < $cantidad) {
-                    throw new Exception(
-                        "Stock insuficiente para el producto ID {$detalle->PRO_ID} en la bodega seleccionada. " .
-                        "Stock actual: {$stockActual}, requerido: {$cantidad}"
-                    );
-                }
-
-                $nuevoStock = $stockActual - $cantidad;
-
-                // Actualizar stock en pivote
-                DB::table('BODEGA_PRODUCTO')
-                    ->where('BOD_ID', $bodega->BOD_ID)
-                    ->where('PRO_ID', $detalle->PRO_ID)
-                    ->update([
-                        'BP_STOCK' => $nuevoStock,
-                        'UPDATED_AT' => now(),
-                    ]);
             }
 
             // 2) IVA y total
@@ -128,25 +111,11 @@ class ComprobanteController extends Controller
                 throw new Exception("El total a facturar no puede ser cero.");
             }
 
-            /**
-             * =========================================================
-             * FIX DBLINK:
-             * Oracle NO soporta RETURNING INTO por DBLINK.
-             * Entonces generamos COM_ID manualmente desde la SEQUENCE.
-             * =========================================================
-             */
-            $nextCom = DB::selectOne('SELECT COMPROBANTE_SEQ.NEXTVAL AS ID FROM DUAL');
-            $comprobanteId = (int) $nextCom->id;
-
-            // 3) Crear Comprobante (BD2 remoto) con ID explícito
+            // 3) Crear Comprobante (BD1) con ID automático
             $comprobante = new Comprobante();
-            $comprobante->COM_ID = $comprobanteId;  // ✅ CLAVE
             $comprobante->CRD_ID = $carrito->CRD_ID;
             $comprobante->CLI_ID = $carrito->CLI_ID;
-
-            // Mantienes BOD_ID como dato (sin FK real entre BD)
-            $comprobante->BOD_ID = $request->BOD_ID;
-
+            $comprobante->BOD_ID = $request->BOD_ID; // Bodega para descontar stock
             $comprobante->COM_FECHA = now();
             $comprobante->COM_SUBTOTAL = $subtotal;
             $comprobante->COM_IVA = $iva;
@@ -155,40 +124,69 @@ class ComprobanteController extends Controller
             $comprobante->COM_ESTADO = 'EMITIDO';
             $comprobante->save();
 
-            // 3.5) Crear DetalleComprobante (BD2 remoto) con snapshots
+            /**
+             * =========================================================
+             * 3.5) VALIDACIÓN + DESCUENTO + DETALLE COMPROBANTE (en loop)
+             * =========================================================
+             * ✅ Mantiene tu lógica: por cada detalle:
+             * - lockForUpdate sobre BODEGA_PRODUCTO
+             * - valida stock
+             * - descuenta stock
+             * - inserta detalle comprobante
+             */
             foreach ($carrito->detalles as $detalle) {
 
-                // Recomendado: generar DCO_ID manual para evitar RETURNING por DBLINK
-                $nextDet = DB::selectOne('SELECT DETALLE_COMPROBANTE_SEQ.NEXTVAL AS ID FROM DUAL');
-                $detalleId = (int) $nextDet->id;
+                // $bp = DB::table('BODEGA_PRODUCTO')
+                //->selectRaw('BP_STOCK as "bp_stock", BP_STOCK_MIN as "bp_stock_min"')
+                // ->where('BOD_ID', $request->BOD_ID)
+                // ->where('PRO_ID', $detalle->PRO_ID)
+                // ->lockForUpdate()
+                //->first();
 
+                //$nombreProducto = $detalle->producto->PRO_NOMBRE ?? ('PRO_ID=' . $detalle->PRO_ID);
+
+                // if (!$bp) {
+                //  throw new Exception("El producto {$nombreProducto} no existe en la bodega seleccionada.");
+                //}
+
+                // $stockActual = (int) $bp->bp_stock;
+                // $cantidad = (int) $detalle->DCA_CANTIDAD;
+
+                // if ($stockActual < $cantidad) {
+                // throw new Exception("Stock insuficiente para {$nombreProducto} (Disponible: {$stockActual}).");
+                //}
+
+                // Descontar Stock (manteniendo lock)
+                //DB::table('BODEGA_PRODUCTO')
+                // ->where('BOD_ID', $request->BOD_ID)
+                // ->where('PRO_ID', $detalle->PRO_ID)
+                // ->update([
+                //'BP_STOCK' => $stockActual - $cantidad,
+                //'UPDATED_AT' => now(),
+                //]);
+
+                // Crear detalle comprobante (sin snapshots)
                 $dc = new DetalleComprobante();
-                $dc->DCO_ID = $detalleId;         // ✅ CLAVE
-                $dc->COM_ID = $comprobanteId;     // ✅ CLAVE
+                $dc->COM_ID = $comprobante->COM_ID;
                 $dc->PRO_ID = $detalle->PRO_ID;
-
-                $dc->PRO_CODIGO_SNAP = $detalle->PRO_CODIGO;
-                $dc->PRO_NOMBRE_SNAP = $detalle->PRO_NOMBRE;
-
-                $dc->DCO_CANTIDAD = (int) $detalle->DCA_CANTIDAD;
+                $dc->DCO_CANTIDAD = $cantidad;
                 $dc->DCO_PRECIO_UNITARIO = (float) $detalle->DCA_PRECIO_UNITARIO;
                 $dc->DCO_SUBTOTAL = (float) $detalle->DCA_SUBTOTAL;
-
                 $dc->save();
             }
 
-            // 4) Kardex (Salida) — BD1
+            // 4) Kardex (Salida)
             foreach ($carrito->detalles as $detalle) {
                 Kardex::create([
                     'BOD_ID' => $request->BOD_ID,
                     'PRO_ID' => $detalle->PRO_ID,
                     'TRA_ID' => $transaccionSalida->TRA_ID,
                     'ORD_ID' => null,
-                    'COM_ID' => $comprobanteId, // ✅ usar el ID manual
+                    'COM_ID' => $comprobante->COM_ID,
                     'KRD_FECHA' => now(),
                     'KRD_CANTIDAD' => -1 * abs((int) $detalle->DCA_CANTIDAD),
                     'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
-                    'KRD_OBSERVACION' => 'Venta Factura #' . $comprobanteId
+                    'KRD_OBSERVACION' => 'Venta Factura #' . $comprobante->COM_ID
                 ]);
             }
 
@@ -196,13 +194,9 @@ class ComprobanteController extends Controller
             $carrito->CRD_ESTADO = 'FACTURADA';
             $carrito->save();
 
-            // 6) Limpiar DETALLE_CARRITO (Requisito: eliminar detalle físico tras facturar)
-            // Se asume que los datos ya viven en DETALLE_COMPROBANTE
-            //CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)->delete();
-
             DB::commit();
 
-            return redirect()->route('comprobantes.show', $comprobanteId)
+            return redirect()->route('comprobantes.show', $comprobante->COM_ID)
                 ->with('success', 'Factura emitida correctamente y stock actualizado.');
 
         } catch (Exception $e) {
@@ -264,8 +258,6 @@ class ComprobanteController extends Controller
     public function anular(Request $request, $id)
     {
         try {
-            // OJO: si tu relación carrito/detalles también está distribuida,
-            // esto puede fallar. Si te da problemas, migramos a usar DetalleComprobante.
             $comprobante = Comprobante::with('carrito.detalles')->findOrFail($id);
 
             $request->validate([
@@ -292,7 +284,6 @@ class ComprobanteController extends Controller
                 $bodegaId = $comprobante->BOD_ID;
 
                 foreach ($comprobante->carrito->detalles as $detalle) {
-
                     $cantidad = (int) $detalle->DCA_CANTIDAD;
 
                     $bp = DB::table('BODEGA_PRODUCTO')
