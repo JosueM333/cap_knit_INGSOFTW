@@ -4,14 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('CLIENTE', function (Blueprint $table) {
+        Schema::connection('oracle_guayaquil')->create('CLIENTE', function (Blueprint $table) {
             $table->id('CLI_ID'); // PK
             $table->string('CLI_NOMBRES');
             $table->string('CLI_APELLIDOS');
@@ -20,10 +19,10 @@ return new class extends Migration
             $table->string('CLI_TELEFONO')->nullable();
             $table->string('CLI_DIRECCION')->nullable();
             $table->string('CLI_PASSWORD');
-            
+
             // Estado definido como string, por defecto 'ACTIVO'
             $table->string('CLI_ESTADO')->default('ACTIVO');
-            
+
             $table->timestamps();
         });
     }
@@ -33,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('CLIENTE');
+        Schema::connection('oracle_guayaquil')->dropIfExists('CLIENTE');
     }
 };

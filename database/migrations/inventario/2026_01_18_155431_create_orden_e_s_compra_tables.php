@@ -4,28 +4,27 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         // 1. Tabla Cabecera (Orden de Compra)
-        Schema::create('ORDEN_COMPRA', function (Blueprint $table) {
-            $table->id('ORD_ID'); 
-            
+        Schema::connection('oracle')->create('ORDEN_COMPRA', function (Blueprint $table) {
+            $table->id('ORD_ID');
+
             // Relación con Proveedor
             $table->foreignId('PRV_ID')->constrained('PROVEEDOR', 'PRV_ID')->onDelete('cascade');
 
             $table->dateTime('ORD_FECHA');
             $table->decimal('ORD_TOTAL', 10, 2)->default(0);
-            
+
             // Estado descriptivo
-            $table->string('ORD_ESTADO')->default('PENDIENTE'); 
+            $table->string('ORD_ESTADO')->default('PENDIENTE');
 
             $table->timestamps(); // created_at, updated_at
         });
 
         // 2. Tabla Detalle (Productos dentro de la orden)
-        Schema::create('DETALLE_ORDEN', function (Blueprint $table) {
+        Schema::connection('oracle')->create('DETALLE_ORDEN_COMPRA', function (Blueprint $table) {
             $table->id('DOR_ID');
 
             // Relación con Cabecera
@@ -44,7 +43,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('DETALLE_ORDEN');
-        Schema::dropIfExists('ORDEN_COMPRA');
+        Schema::connection('oracle')->dropIfExists('DETALLE_ORDEN_COMPRA');
+        Schema::connection('oracle')->dropIfExists('ORDEN_COMPRA');
     }
 };

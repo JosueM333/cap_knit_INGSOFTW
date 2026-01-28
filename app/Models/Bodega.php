@@ -13,6 +13,7 @@ class Bodega extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle';
     protected $table = 'BODEGA';
     protected $primaryKey = 'BOD_ID';
     public $timestamps = true;

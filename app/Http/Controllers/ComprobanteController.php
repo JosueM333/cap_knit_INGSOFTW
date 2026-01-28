@@ -68,8 +68,8 @@ class ComprobanteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'CRD_ID' => 'required|exists:CARRITO,CRD_ID',
-            'BOD_ID' => 'required|exists:BODEGA,BOD_ID',
+            'CRD_ID' => 'required|exists:oracle_guayaquil.CARRITO,CRD_ID',
+            'BOD_ID' => 'required|exists:oracle.BODEGA,BOD_ID',
             'observaciones' => 'nullable|string|max:255',
         ]);
 
@@ -78,32 +78,26 @@ class ComprobanteController extends Controller
             return back()->with('error', 'Esta venta ya ha sido facturada previamente.');
         }
 
-        DB::beginTransaction();
-        try {
-            /**
-             * ✅ CORRECCIÓN:
-             * Aseguramos detalles.producto para:
-             * - evitar $detalle->producto null
-             * - evitar N+1 queries
-             */
-            $carrito = Carrito::with(['detalles.producto', 'cliente'])->findOrFail($request->CRD_ID);
+        // INICIO TRANSACCIÓN DISTRIBUIDA (Best Effort)
+        DB::connection('oracle')->beginTransaction();
+        DB::connection('oracle_guayaquil')->beginTransaction();
 
+        try {
+            // 1. Obtener Carrito (BD2 - Sales)
+            // Nota: No usamos 'detalles.producto' si es cross-db. Cargamos solo detalles.
+            $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
+
+            // Validar bodega (BD1 - Inventory)
             $bodega = Bodega::findOrFail($request->BOD_ID);
             $transaccionSalida = Transaccion::where('TRA_CODIGO', 'SALIDA')->firstOrFail();
 
-            /**
-             * =========================================================
-             * 1) SOLO CALCULAR SUBTOTAL EN LARAVEL
-             * =========================================================
-             * ✅ Aquí NO se descuenta stock. El descuento se hace en el loop (3.5).
-             */
+            // 2. Calcular Totales (Datos vienen del carrito en BD2)
             $subtotal = 0;
             foreach ($carrito->detalles as $detalle) {
                 $cantidad = (int) $detalle->DCA_CANTIDAD;
                 $subtotal += $cantidad * (float) $detalle->DCA_PRECIO_UNITARIO;
             }
 
-            // 2) IVA y total
             $iva = $subtotal * 0.15;
             $total = $subtotal + $iva;
 
@@ -111,96 +105,103 @@ class ComprobanteController extends Controller
                 throw new Exception("El total a facturar no puede ser cero.");
             }
 
-            // 3) Crear Comprobante (BD1) con ID automático
+            // 3. Crear Comprobante (BD2 - Sales)
             $comprobante = new Comprobante();
             $comprobante->CRD_ID = $carrito->CRD_ID;
             $comprobante->CLI_ID = $carrito->CLI_ID;
-            $comprobante->BOD_ID = $request->BOD_ID; // Bodega para descontar stock
+            $comprobante->BOD_ID = $request->BOD_ID; // Referencia lógica a BD1
             $comprobante->COM_FECHA = now();
             $comprobante->COM_SUBTOTAL = $subtotal;
             $comprobante->COM_IVA = $iva;
             $comprobante->COM_TOTAL = $total;
             $comprobante->COM_OBSERVACIONES = $request->observaciones;
             $comprobante->COM_ESTADO = 'EMITIDO';
-            $comprobante->save();
+            $comprobante->save(); // Save in oracle_guayaquil
 
             /**
-             * =========================================================
-             * 3.5) VALIDACIÓN + DESCUENTO + DETALLE COMPROBANTE (en loop)
-             * =========================================================
-             * ✅ Mantiene tu lógica: por cada detalle:
-             * - lockForUpdate sobre BODEGA_PRODUCTO
-             * - valida stock
-             * - descuenta stock
-             * - inserta detalle comprobante
+             * 4. Procesar Detalles:
+             *    - Validar Stock (BD1)
+             *    - Descontar Stock (BD1)
+             *    - Crear Detalle Comprobante (BD2)
+             *    - Crear Kardex (BD1)
              */
+
             foreach ($carrito->detalles as $detalle) {
+                $proId = $detalle->PRO_ID;
+                $cantidad = (int) $detalle->DCA_CANTIDAD;
 
-                // $bp = DB::table('BODEGA_PRODUCTO')
-                //->selectRaw('BP_STOCK as "bp_stock", BP_STOCK_MIN as "bp_stock_min"')
-                // ->where('BOD_ID', $request->BOD_ID)
-                // ->where('PRO_ID', $detalle->PRO_ID)
-                // ->lockForUpdate()
-                //->first();
+                // A) Validar y Bloquear Stock en BD1 (Oracle)
+                $bp = DB::connection('oracle')->table('BODEGA_PRODUCTO')
+                    ->selectRaw('bp_stock')
+                    ->where('BOD_ID', $request->BOD_ID)
+                    ->where('PRO_ID', $proId)
+                    ->lockForUpdate()
+                    ->first();
 
-                //$nombreProducto = $detalle->producto->PRO_NOMBRE ?? ('PRO_ID=' . $detalle->PRO_ID);
+                if (!$bp) {
+                    // Podemos intentar buscar el nombre del producto para el error
+                    $prodName = DB::connection('oracle')->table('PRODUCTO')->where('PRO_ID', $proId)->value('PRO_NOMBRE') ?? "ID $proId";
+                    throw new Exception("El producto '$prodName' no existe en la bodega seleccionada.");
+                }
 
-                // if (!$bp) {
-                //  throw new Exception("El producto {$nombreProducto} no existe en la bodega seleccionada.");
-                //}
+                $stockActual = (int) $bp->bp_stock; // Nota: Oracle devuelve columnas en mayúsculas a veces, o lower. Usar array access o standard. DB::table suele devolver obj con nombres exactos.
 
-                // $stockActual = (int) $bp->bp_stock;
-                // $cantidad = (int) $detalle->DCA_CANTIDAD;
+                if ($stockActual < $cantidad) {
+                    $prodName = DB::connection('oracle')->table('PRODUCTO')->where('PRO_ID', $proId)->value('PRO_NOMBRE') ?? "ID $proId";
+                    throw new Exception("Stock insuficiente para '$prodName' (Disponible: $stockActual).");
+                }
 
-                // if ($stockActual < $cantidad) {
-                // throw new Exception("Stock insuficiente para {$nombreProducto} (Disponible: {$stockActual}).");
-                //}
+                // B) Descontar Stock en BD1
+                DB::connection('oracle')->table('BODEGA_PRODUCTO')
+                    ->where('BOD_ID', $request->BOD_ID)
+                    ->where('PRO_ID', $proId)
+                    ->update([
+                        'bp_stock' => $stockActual - $cantidad,
+                        'updated_at' => now(), // Asegurarse que columna existe en lower o UPPER según migración
+                    ]);
 
-                // Descontar Stock (manteniendo lock)
-                //DB::table('BODEGA_PRODUCTO')
-                // ->where('BOD_ID', $request->BOD_ID)
-                // ->where('PRO_ID', $detalle->PRO_ID)
-                // ->update([
-                //'BP_STOCK' => $stockActual - $cantidad,
-                //'UPDATED_AT' => now(),
-                //]);
-
-                // Crear detalle comprobante (sin snapshots)
+                // C) Crear Detalle Comprobante en BD2
                 $dc = new DetalleComprobante();
                 $dc->COM_ID = $comprobante->COM_ID;
-                $dc->PRO_ID = $detalle->PRO_ID;
+                $dc->PRO_ID = $proId; // ID lógico
                 $dc->DCO_CANTIDAD = $cantidad;
                 $dc->DCO_PRECIO_UNITARIO = (float) $detalle->DCA_PRECIO_UNITARIO;
                 $dc->DCO_SUBTOTAL = (float) $detalle->DCA_SUBTOTAL;
-                $dc->save();
-            }
+                $dc->save(); // Save in oracle_guayaquil
 
-            // 4) Kardex (Salida)
-            foreach ($carrito->detalles as $detalle) {
-                Kardex::create([
+                // D) Crear Kardex en BD1
+                Kardex::create([ // Modelo Kardex usa conexión 'oracle'
                     'BOD_ID' => $request->BOD_ID,
-                    'PRO_ID' => $detalle->PRO_ID,
+                    'PRO_ID' => $proId,
                     'TRA_ID' => $transaccionSalida->TRA_ID,
                     'ORD_ID' => null,
-                    'COM_ID' => $comprobante->COM_ID,
+                    'COM_ID' => $comprobante->COM_ID, // ID de Comprobante (BD2) guardado en Kardex (BD1) como referencia
                     'KRD_FECHA' => now(),
-                    'KRD_CANTIDAD' => -1 * abs((int) $detalle->DCA_CANTIDAD),
+                    'KRD_CANTIDAD' => -1 * abs($cantidad),
                     'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
                     'KRD_OBSERVACION' => 'Venta Factura #' . $comprobante->COM_ID
                 ]);
             }
 
-            // 5) Marcar carrito como facturado
+            // 5) Marcar carrito como facturado (BD2)
             $carrito->CRD_ESTADO = 'FACTURADA';
             $carrito->save();
 
-            DB::commit();
+            // 6) Borrar detalles del carrito (BD2)
+            $carrito->detalles()->delete();
+
+            // COMMIT AMBAS
+            DB::connection('oracle_guayaquil')->commit();
+            DB::connection('oracle')->commit();
 
             return redirect()->route('comprobantes.show', $comprobante->COM_ID)
                 ->with('success', 'Factura emitida correctamente y stock actualizado.');
 
         } catch (Exception $e) {
-            DB::rollBack();
+            // ROLLBACK AMBAS
+            DB::connection('oracle_guayaquil')->rollBack();
+            DB::connection('oracle')->rollBack();
+
             Log::error("Error emitiendo factura: " . $e->getMessage());
 
             return back()
@@ -212,7 +213,23 @@ class ComprobanteController extends Controller
     // --- F5.1 Ver Detalle ---
     public function show($id)
     {
+        // Traemos Comprobante (BD2)
         $comprobante = Comprobante::with(['cliente', 'detalles'])->findOrFail($id);
+
+        // Enriquecer visualización: cargar nombres de productos desde BD1
+        // Obtenemos IDs de productos
+        $proIds = $comprobante->detalles->pluck('PRO_ID')->unique();
+
+        // Buscamos info en BD1
+        $productosInfo = DB::connection('oracle')->table('PRODUCTO')
+            ->whereIn('PRO_ID', $proIds)
+            ->pluck('pro_nombre', 'pro_id'); // Retorna [id => nombre]
+
+        // Inyectamos nombre en objeto detalle (atributo dinámico para la vista)
+        foreach ($comprobante->detalles as $detalle) {
+            $detalle->producto_nombre = $productosInfo[$detalle->PRO_ID] ?? 'Producto Desconocido';
+        }
+
         return view('comprobantes.show', compact('comprobante'));
     }
 
@@ -258,77 +275,90 @@ class ComprobanteController extends Controller
     public function anular(Request $request, $id)
     {
         try {
-            $comprobante = Comprobante::with('carrito.detalles')->findOrFail($id);
+            // Cargar comprobante BD2
+            $comprobante = Comprobante::with('detalles')->findOrFail($id);
+            // Nota: 'carrito.detalles' ya se borraron en el store. Usamos $comprobante->detalles
 
             $request->validate([
                 'motivo_anulacion' => 'required|string|min:5|max:200'
             ]);
 
-            DB::beginTransaction();
-
             if ($comprobante->COM_ESTADO === 'ANULADO') {
                 return back()->with('error', 'El comprobante ya está anulado.');
             }
 
-            $comprobante->COM_ESTADO = 'ANULADO';
+            // TRANSACCIÓN DISTRIBUIDA
+            DB::connection('oracle')->beginTransaction();
+            DB::connection('oracle_guayaquil')->beginTransaction();
 
-            $motivo = $request->input('motivo_anulacion');
-            $comprobante->COM_OBSERVACIONES = trim(
-                ($comprobante->COM_OBSERVACIONES ?? '') . " | [ANULADO " . now()->format('d/m/Y') . "]: " . $motivo
-            );
-            $comprobante->save();
+            try {
+                // 1. Actualizar Comprobante (BD2)
+                $comprobante->COM_ESTADO = 'ANULADO';
+                $motivo = $request->input('motivo_anulacion');
+                $comprobante->COM_OBSERVACIONES = trim(
+                    ($comprobante->COM_OBSERVACIONES ?? '') . " | [ANULADO " . now()->format('d/m/Y') . "]: " . $motivo
+                );
+                $comprobante->save();
 
-            $transaccionAjuste = Transaccion::where('TRA_CODIGO', 'AJUSTE')->first();
+                // 2. Restaurar Stock en BD1
+                $transaccionAjuste = Transaccion::where('TRA_CODIGO', 'AJUSTE')->first(); // BD1
 
-            if ($comprobante->BOD_ID) {
-                $bodegaId = $comprobante->BOD_ID;
+                if ($comprobante->BOD_ID) {
+                    $bodegaId = $comprobante->BOD_ID;
 
-                foreach ($comprobante->carrito->detalles as $detalle) {
-                    $cantidad = (int) $detalle->DCA_CANTIDAD;
+                    foreach ($comprobante->detalles as $detalle) {
+                        $cantidad = (int) $detalle->DCO_CANTIDAD; // Usamos cantidad del detalle comprobante
+                        $proId = $detalle->PRO_ID;
 
-                    $bp = DB::table('BODEGA_PRODUCTO')
-                        ->selectRaw('BP_STOCK as "bp_stock"')
-                        ->where('BOD_ID', $bodegaId)
-                        ->where('PRO_ID', $detalle->PRO_ID)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($bp) {
-                        $stockActual = (int) $bp->bp_stock;
-                        $nuevoStock = $stockActual + $cantidad;
-
-                        DB::table('BODEGA_PRODUCTO')
+                        // Lock en BD1
+                        $bp = DB::connection('oracle')->table('BODEGA_PRODUCTO')
+                            ->selectRaw('bp_stock')
                             ->where('BOD_ID', $bodegaId)
-                            ->where('PRO_ID', $detalle->PRO_ID)
-                            ->update([
-                                'BP_STOCK' => $nuevoStock,
-                                'UPDATED_AT' => now(),
-                            ]);
-                    }
+                            ->where('PRO_ID', $proId)
+                            ->lockForUpdate()
+                            ->first();
 
-                    Kardex::create([
-                        'BOD_ID' => $bodegaId,
-                        'PRO_ID' => $detalle->PRO_ID,
-                        'TRA_ID' => $transaccionAjuste->TRA_ID ?? 1,
-                        'ORD_ID' => null,
-                        'COM_ID' => $comprobante->COM_ID,
-                        'KRD_FECHA' => now(),
-                        'KRD_CANTIDAD' => abs($cantidad),
-                        'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
-                        'KRD_OBSERVACION' => 'Anulación Factura #' . $comprobante->COM_ID
-                    ]);
+                        if ($bp) {
+                            $stockActual = (int) $bp->bp_stock;
+                            $nuevoStock = $stockActual + $cantidad;
+
+                            DB::connection('oracle')->table('BODEGA_PRODUCTO')
+                                ->where('BOD_ID', $bodegaId)
+                                ->where('PRO_ID', $proId)
+                                ->update([
+                                    'bp_stock' => $nuevoStock,
+                                    'updated_at' => now(),
+                                ]);
+                        }
+
+                        // Kardex en BD1
+                        Kardex::create([
+                            'BOD_ID' => $bodegaId,
+                            'PRO_ID' => $proId,
+                            'TRA_ID' => $transaccionAjuste->TRA_ID ?? 1,
+                            'ORD_ID' => null,
+                            'COM_ID' => $comprobante->COM_ID,
+                            'KRD_FECHA' => now(),
+                            'KRD_CANTIDAD' => abs($cantidad),
+                            'KRD_USUARIO' => auth()->user()->name ?? 'Sistema',
+                            'KRD_OBSERVACION' => 'Anulación Factura #' . $comprobante->COM_ID
+                        ]);
+                    }
                 }
+
+                DB::connection('oracle_guayaquil')->commit();
+                DB::connection('oracle')->commit();
+
+                return redirect()->route('comprobantes.index')
+                    ->with('success', 'Comprobante ANULADO correctamente y stock restaurado.');
+            } catch (Exception $e2) {
+                DB::connection('oracle_guayaquil')->rollBack();
+                DB::connection('oracle')->rollBack();
+                throw $e2;
             }
 
-            DB::commit();
-
-            return redirect()->route('comprobantes.index')
-                ->with('success', 'Comprobante ANULADO correctamente y stock restaurado.');
-
         } catch (Exception $e) {
-            DB::rollBack();
             Log::error("Error anulando comprobante ($id): " . $e->getMessage());
-
             return back()->with('error', 'Error inesperado al anular el comprobante: ' . $e->getMessage());
         }
     }

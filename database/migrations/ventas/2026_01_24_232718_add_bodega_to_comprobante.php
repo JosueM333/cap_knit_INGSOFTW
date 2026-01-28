@@ -10,9 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('COMPROBANTE', function (Blueprint $table) {
+        Schema::connection('oracle_guayaquil')->table('COMPROBANTE', function (Blueprint $table) {
             $table->unsignedBigInteger('BOD_ID')->nullable()->after('CLI_ID');
-            $table->foreign('BOD_ID')->references('BOD_ID')->on('BODEGA');
+            // Cross-DB: No foreign key
+            // $table->foreign('BOD_ID')->references('BOD_ID')->on('BODEGA');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('COMPROBANTE', function (Blueprint $table) {
-            $table->dropForeign(['BOD_ID']);
+        Schema::connection('oracle_guayaquil')->table('COMPROBANTE', function (Blueprint $table) {
+            // $table->dropForeign(['BOD_ID']);
             $table->dropColumn('BOD_ID');
         });
     }

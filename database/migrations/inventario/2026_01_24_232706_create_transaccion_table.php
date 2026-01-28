@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('TRANSACCION', function (Blueprint $table) {
+        Schema::connection('oracle')->create('TRANSACCION', function (Blueprint $table) {
             $table->id('TRA_ID'); // PK Autoincrement
             $table->string('TRA_CODIGO', 20)->unique(); // ENTRADA, SALIDA, AJUSTE
             $table->string('TRA_DESCRIPCION', 100);

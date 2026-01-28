@@ -10,6 +10,7 @@ class Kardex extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle';
     protected $table = 'KARDEX';
     protected $primaryKey = 'KRD_ID';
     public $timestamps = true;

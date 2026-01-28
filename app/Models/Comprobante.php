@@ -10,6 +10,7 @@ class Comprobante extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle_guayaquil';
     protected $table = 'COMPROBANTE';
     protected $primaryKey = 'COM_ID';
 

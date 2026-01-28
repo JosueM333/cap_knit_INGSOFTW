@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('KARDEX', function (Blueprint $table) {
+        Schema::connection('oracle')->create('KARDEX', function (Blueprint $table) {
             $table->id('KRD_ID');
 
             // FKs
@@ -51,6 +51,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('KARDEX');
+        Schema::connection('oracle')->dropIfExists('KARDEX');
     }
 };

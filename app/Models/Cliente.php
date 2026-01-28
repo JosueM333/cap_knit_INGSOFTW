@@ -14,6 +14,7 @@ class Cliente extends Authenticatable
 {
     use HasFactory, Notifiable, OracleCompatible;
 
+    protected $connection = 'oracle_guayaquil';
     protected $table = 'CLIENTE';
     protected $primaryKey = 'CLI_ID';
 
@@ -62,8 +63,8 @@ class Cliente extends Authenticatable
         $reglas = [
             'CLI_NOMBRES' => 'required|string|max:80',
             'CLI_APELLIDOS' => 'required|string|max:80',
-            'CLI_CEDULA' => 'required|string|size:10|unique:CLIENTE,CLI_CEDULA' . ($id ? ",$id,CLI_ID" : ''),
-            'CLI_EMAIL' => 'required|email|max:80|unique:CLIENTE,CLI_EMAIL' . ($id ? ",$id,CLI_ID" : ''),
+            'CLI_CEDULA' => 'required|string|size:10|unique:oracle_guayaquil.CLIENTE,CLI_CEDULA' . ($id ? ",$id,CLI_ID" : ''),
+            'CLI_EMAIL' => 'required|email|max:80|unique:oracle_guayaquil.CLIENTE,CLI_EMAIL' . ($id ? ",$id,CLI_ID" : ''),
             'CLI_TELEFONO' => 'required|string|max:15',
             'CLI_DIRECCION' => 'required|string|max:100',
             'CLI_PASSWORD' => $id ? 'nullable|string|min:6' : 'required|string|min:6',

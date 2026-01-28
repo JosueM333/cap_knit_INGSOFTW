@@ -11,6 +11,7 @@ use App\Traits\OracleCompatible;
 class OrdenCompra extends Model
 {
     use OracleCompatible;
+    protected $connection = 'oracle';
     protected $table = 'ORDEN_COMPRA';
     protected $primaryKey = 'ORD_ID';
     public $timestamps = true;

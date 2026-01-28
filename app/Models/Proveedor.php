@@ -12,6 +12,7 @@ class Proveedor extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle';
     protected $table = 'PROVEEDOR';
     protected $primaryKey = 'PRV_ID';
     public $timestamps = true;

@@ -14,6 +14,7 @@ class Producto extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle';
     protected $table = 'PRODUCTO';
     protected $primaryKey = 'PRO_ID';
     public $timestamps = true;

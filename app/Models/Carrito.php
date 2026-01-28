@@ -12,6 +12,7 @@ class Carrito extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle_guayaquil';
     protected $table = 'CARRITO';
     protected $primaryKey = 'CRD_ID';
 

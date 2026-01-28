@@ -10,16 +10,16 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('DETALLE_COMPROBANTE', function (Blueprint $table) {
+        Schema::connection('oracle_guayaquil')->create('DETALLE_COMPROBANTE', function (Blueprint $table) {
             $table->id('DCO_ID'); // PK
 
             // Relación con COMPROBANTE
             $table->unsignedBigInteger('COM_ID');
             $table->foreign('COM_ID')->references('COM_ID')->on('COMPROBANTE')->onDelete('cascade');
 
-            // Relación con PRODUCTO
+            // Relación con PRODUCTO (Cross-DB)
             $table->unsignedBigInteger('PRO_ID');
-            $table->foreign('PRO_ID')->references('PRO_ID')->on('PRODUCTO');
+            // $table->foreign('PRO_ID')->references('PRO_ID')->on('PRODUCTO');
 
             // Valores monetarios y cantidades
             $table->integer('DCO_CANTIDAD');
@@ -35,6 +35,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('DETALLE_COMPROBANTE');
+        Schema::connection('oracle_guayaquil')->dropIfExists('DETALLE_COMPROBANTE');
     }
 };

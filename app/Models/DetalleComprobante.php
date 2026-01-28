@@ -10,6 +10,7 @@ class DetalleComprobante extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle_guayaquil';
     protected $table = 'DETALLE_COMPROBANTE';
     protected $primaryKey = 'DCO_ID';
 

@@ -10,6 +10,7 @@ class CarritoDetalle extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle_guayaquil';
     protected $table = 'DETALLE_CARRITO';
     protected $primaryKey = 'DCA_ID';
 

@@ -10,6 +10,7 @@ class Transaccion extends Model
 {
     use HasFactory, OracleCompatible;
 
+    protected $connection = 'oracle';
     protected $table = 'TRANSACCION';
     protected $primaryKey = 'TRA_ID';
     public $timestamps = true;
