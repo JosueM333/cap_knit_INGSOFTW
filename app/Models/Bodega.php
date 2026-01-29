@@ -22,7 +22,8 @@ class Bodega extends Model
     protected $fillable = [
         'BOD_NOMBRE',
         'BOD_UBICACION',
-        'BOD_DESCRIPCION'
+        'BOD_DESCRIPCION',
+        'BOD_ES_DEFECTO'
         // ELIMINADO: BOD_ESTADO
     ];
 

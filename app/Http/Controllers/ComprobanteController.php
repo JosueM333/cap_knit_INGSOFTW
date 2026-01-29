@@ -69,7 +69,7 @@ class ComprobanteController extends Controller
     {
         $request->validate([
             'CRD_ID' => 'required|exists:oracle_guayaquil.CARRITO,CRD_ID',
-            'BOD_ID' => 'required|exists:oracle.BODEGA,BOD_ID',
+            // 'BOD_ID' => 'required|exists:oracle.BODEGA,BOD_ID', // Ya no se valida como input
             'observaciones' => 'nullable|string|max:255',
         ]);
 
@@ -88,7 +88,15 @@ class ComprobanteController extends Controller
             $carrito = Carrito::with(['detalles', 'cliente'])->findOrFail($request->CRD_ID);
 
             // Validar bodega (BD1 - Inventory)
-            $bodega = Bodega::findOrFail($request->BOD_ID);
+            // $bodega = Bodega::findOrFail($request->BOD_ID);
+
+            // BUSCAR BODEGA POR DEFECTO AUTOMÁTICAMENTE
+            $bodegaDefecto = Bodega::where('BOD_ES_DEFECTO', 1)->first();
+            if (!$bodegaDefecto) {
+                throw new Exception("No hay una bodega predeterminada configurada en el sistema. Por favor configure una en Gestión de Bodegas.");
+            }
+            $bodegaId = $bodegaDefecto->BOD_ID;
+
             $transaccionSalida = Transaccion::where('TRA_CODIGO', 'SALIDA')->firstOrFail();
 
             // 2. Calcular Totales (Datos vienen del carrito en BD2)
@@ -109,7 +117,7 @@ class ComprobanteController extends Controller
             $comprobante = new Comprobante();
             $comprobante->CRD_ID = $carrito->CRD_ID;
             $comprobante->CLI_ID = $carrito->CLI_ID;
-            $comprobante->BOD_ID = $request->BOD_ID; // Referencia lógica a BD1
+            $comprobante->BOD_ID = $bodegaId; // Asignamos la bodega por defecto
             $comprobante->COM_FECHA = now();
             $comprobante->COM_SUBTOTAL = $subtotal;
             $comprobante->COM_IVA = $iva;
@@ -133,7 +141,7 @@ class ComprobanteController extends Controller
                 // A) Validar y Bloquear Stock en BD1 (Oracle)
                 $bp = DB::connection('oracle')->table('BODEGA_PRODUCTO')
                     ->selectRaw('bp_stock')
-                    ->where('BOD_ID', $request->BOD_ID)
+                    ->where('BOD_ID', $bodegaId)
                     ->where('PRO_ID', $proId)
                     ->lockForUpdate()
                     ->first();
@@ -153,7 +161,7 @@ class ComprobanteController extends Controller
 
                 // B) Descontar Stock en BD1
                 DB::connection('oracle')->table('BODEGA_PRODUCTO')
-                    ->where('BOD_ID', $request->BOD_ID)
+                    ->where('BOD_ID', $bodegaId)
                     ->where('PRO_ID', $proId)
                     ->update([
                         'bp_stock' => $stockActual - $cantidad,
@@ -171,7 +179,7 @@ class ComprobanteController extends Controller
 
                 // D) Crear Kardex en BD1
                 Kardex::create([ // Modelo Kardex usa conexión 'oracle'
-                    'BOD_ID' => $request->BOD_ID,
+                    'BOD_ID' => $bodegaId,
                     'PRO_ID' => $proId,
                     'TRA_ID' => $transaccionSalida->TRA_ID,
                     'ORD_ID' => null,

@@ -82,55 +82,43 @@
                                     ${{ number_format($item['price'], 2) }}
                                 </td>
 
-                                <td class="text-center">
-                                    <form action="{{ route('update.cart') }}" method="POST" class="d-inline-flex align-items-center gap-1">
-                                        @csrf @method('PATCH')
+                                <td data-th="Cantidad">
+                                    <form action="{{ route('update.cart') }}" method="POST" class="d-flex align-items-center gap-2">
+                                        @csrf
+                                        @method('PATCH')
                                         <input type="hidden" name="id" value="{{ $id }}">
-                                        
-                                        <button type="submit" name="quantity" value="{{ max(1, $item['quantity'] - 1) }}" 
-                                                class="btn btn-outline-dark btn-sm fw-bold px-3"
-                                                aria-label="Menos {{ $item['name'] }}">
-                                            <span aria-hidden="true">−</span>
-                                        </button>
-                                        
-                                        <label for="qty-{{ $id }}" class="visually-hidden">Cantidad</label>
-                                        <input type="text" id="qty-{{ $id }}" 
-                                               class="form-control text-center fw-bold border-dark mx-1" 
-                                               value="{{ $item['quantity'] }}" readonly style="width:50px">
-                                        
-                                        <button type="submit" name="quantity" value="{{ min(10, $item['quantity'] + 1) }}" 
-                                                class="btn btn-outline-dark btn-sm fw-bold px-3"
-                                                aria-label="Más {{ $item['name'] }}">
-                                            <span aria-hidden="true">+</span>
-                                        </button>
+                                        <input type="number" name="quantity" value="{{ $item['quantity'] }}" 
+                                               class="form-control text-center text-dark fw-bold border-secondary" 
+                                               style="width: 80px;" min="1" max="10"
+                                               onchange="this.form.submit()">
                                     </form>
                                 </td>
-
-                                <td class="text-center fw-bold text-success">
-                                    <span class="visually-hidden">Subtotal </span>
+                                <td data-th="Subtotal" class="text-center fw-bold text-dark fs-5">
                                     ${{ number_format($subtotalItem, 2) }}
                                 </td>
-
-                                <td class="text-center">
+                                <td class="actions" data-th="">
                                     <form action="{{ route('remove.from.cart') }}" method="POST">
-                                        @csrf @method('DELETE')
+                                        @csrf
+                                        @method('DELETE')
                                         <input type="hidden" name="id" value="{{ $id }}">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm border-2"
-                                                aria-label="Quitar {{ $item['name'] }}"
-                                                onclick="return confirm('¿Quitar del carrito?');">
-                                            <i class="bi bi-trash-fill" aria-hidden="true"></i>
+                                        <button class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center" 
+                                                style="width: 32px; height: 32px;" title="Eliminar">
+                                            <i class="bi bi-trash-fill"></i>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot class="table-light">
+                    <tfoot class="border-top-0">
                         <tr>
-                            <td colspan="5" class="p-0 border-0">
-                                <div class="row justify-content-end p-4">
-                                    <div class="col-md-5 border border-2 border-dark rounded p-4 bg-white shadow-sm">
-                                        <h2 class="h5 fw-bold mb-3 border-bottom border-dark pb-2">Resumen</h2>
+                            <td colspan="5" class="pt-4 border-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{{ route('shop.products') }}" class="btn btn-outline-dark fw-bold">
+                                        <i class="bi bi-arrow-left"></i> Seguir Comprando
+                                    </a>
+                                    
+                                    <div class="text-end">
                                         @php
                                             $iva = $total * 0.15;
                                             $totalPagar = $total + $iva;
@@ -150,10 +138,11 @@
                                         </div>
                                         
                                         <div class="d-grid gap-2 mt-4">
-                                            <form action="{{ route('shop.comprar') }}" method="POST" id="formCompra" onsubmit="return checkHighAmount(event)">
+                                            {{-- ACTION: HACER PEDIDO (Guardar en BD) --}}
+                                            <form action="{{ route('shop.saveOrder') }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-success fw-bold w-100 btn-lg shadow border-2 border-success text-uppercase">
-                                                    Pagar Compra
+                                                <button type="submit" class="btn btn-dark fw-bold w-100 btn-lg shadow text-uppercase">
+                                                    Hacer Pedido <i class="bi bi-save2 ms-2"></i>
                                                 </button>
                                             </form>
                                             
@@ -169,51 +158,7 @@
                 </table>
             </div>
             
-            {{-- MODAL CONFIRMACION MONTO ALTO --}}
-            <div class="modal fade" id="highAmountModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content border-warning">
-                        <div class="modal-header bg-warning text-dark">
-                            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Confirmación de Seguridad</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body text-center py-4">
-                            <p class="lead">El monto total a pagar es superior a <strong>$5,000.00</strong>.</p>
-                            <p class="mb-0">¿Confirma que desea procesar esta transacción por <strong>${{ number_format($totalPagar, 2) }}</strong>?</p>
-                        </div>
-                        <div class="modal-footer justify-content-center">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-warning fw-bold" onclick="submitHighAmount()">Confirmar y Pagar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <script>
-                function checkHighAmount(event) {
-                    // Obtener total dinámicamente del DOM para soportar actualizaciones AJAX
-                    const totalElement = document.getElementById('cart-total-display');
-                    let total = 0;
-                    
-                    if (totalElement) {
-                        // Preferir data-amount si existe (valor crudo), sino parsear texto
-                        total = parseFloat(totalElement.getAttribute('data-amount')) || 
-                                parseFloat(totalElement.textContent.replace(/[$,]/g, '')) || 0;
-                    }
-
-                    if (total > 5000) {
-                        event.preventDefault();
-                        var myModal = new bootstrap.Modal(document.getElementById('highAmountModal'));
-                        myModal.show();
-                        return false;
-                    }
-                    return true;
-                }
-
-                function submitHighAmount() {
-                    document.getElementById('formCompra').submit();
-                }
-            </script>
+            <!-- Modal Removed as logic moved to Checkout -->
         @else
             <div class="text-center py-5 border border-2 border-dark rounded shadow-sm bg-light">
                 <i class="bi bi-cart-x fs-1 text-muted" aria-hidden="true"></i>

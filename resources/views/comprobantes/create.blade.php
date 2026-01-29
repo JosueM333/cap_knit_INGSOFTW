@@ -99,14 +99,10 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="BOD_ID" class="form-label fw-bold">Bodega de Origen (Inventario):</label>
-                            <select name="BOD_ID" class="form-select" required>
-                                @foreach($bodegas as $bodega)
-                                    <option value="{{ $bodega->BOD_ID }}">
-                                        {{ $bodega->BOD_NOMBRE }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label fw-bold">Bodega de Origen:</label>
+                            <div class="alert alert-secondary py-2 mb-0">
+                                <i class="bi bi-info-circle me-1"></i> Se usará la bodega predeterminada.
+                            </div>
                         </div>
 
                         <div class="mb-3">

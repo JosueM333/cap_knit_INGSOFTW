@@ -46,9 +46,11 @@ Route::patch('/shop/update-cart', [HomeController::class, 'updateCart'])->name('
 Route::delete('/shop/remove-from-cart', [HomeController::class, 'removeCart'])->name('remove.from.cart');
 
 // Confirmar Compra (Permite clientes reales y admins probando)
-Route::post('/shop/comprar', [HomeController::class, 'comprar'])
-    ->name('shop.comprar')
-    ->middleware('auth:cliente,web');
+// Cart & Pending Orders Flow
+Route::post('/shop/save-order', [HomeController::class, 'saveOrder'])->name('shop.saveOrder')->middleware('auth:cliente');
+Route::get('/shop/pending', [HomeController::class, 'pendingOrders'])->name('shop.pending')->middleware('auth:cliente');
+Route::post('/shop/process-order/{id}', [HomeController::class, 'processOrder'])->name('shop.processOrder')->middleware('auth:cliente');
+Route::get('/shop/invoice/{id}', [HomeController::class, 'invoice'])->name('shop.invoice')->middleware('auth:cliente');
 
 
 // ZONA DE ADMIN – SOLO USUARIOS AUTENTICADOS Y GATITOS PUEDEN ENTRAR
@@ -60,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
 
     // 2. Recursos CRUD Básicos
     Route::resource('clientes', ClienteController::class);
+    Route::patch('/bodegas/{bodega}/set-default', [BodegaController::class, 'setDefault'])->name('bodegas.setDefault');
     Route::resource('bodegas', BodegaController::class);
     Route::resource('proveedores', ProveedorController::class);
     Route::resource('productos', ProductoController::class);

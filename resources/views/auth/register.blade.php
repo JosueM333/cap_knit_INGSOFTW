@@ -104,6 +104,52 @@
                                     </div>
                                 </div>
 
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="CLI_CEDULA" class="form-label fw-bold">
+                                            Cédula <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="text" id="CLI_CEDULA" name="CLI_CEDULA"
+                                            class="form-control @error('CLI_CEDULA') is-invalid @enderror"
+                                            value="{{ old('CLI_CEDULA') }}" required minlength="10" maxlength="10"
+                                            placeholder="Ej: 1712345678">
+                                        @error('CLI_CEDULA')
+                                            <span class="invalid-feedback fw-bold" role="alert">
+                                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="CLI_TELEFONO" class="form-label fw-bold">
+                                            Teléfono <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="text" id="CLI_TELEFONO" name="CLI_TELEFONO"
+                                            class="form-control @error('CLI_TELEFONO') is-invalid @enderror"
+                                            value="{{ old('CLI_TELEFONO') }}" required placeholder="Ej: 0991234567">
+                                        @error('CLI_TELEFONO')
+                                            <span class="invalid-feedback fw-bold" role="alert">
+                                                <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="CLI_DIRECCION" class="form-label fw-bold">
+                                        Dirección <span class="text-danger" aria-hidden="true">*</span>
+                                    </label>
+                                    <input type="text" id="CLI_DIRECCION" name="CLI_DIRECCION"
+                                        class="form-control @error('CLI_DIRECCION') is-invalid @enderror"
+                                        value="{{ old('CLI_DIRECCION') }}" required
+                                        placeholder="Ej: Av. Amazonas y Colon">
+                                    @error('CLI_DIRECCION')
+                                        <span class="invalid-feedback fw-bold" role="alert">
+                                            <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                        </span>
+                                    @enderror
+                                </div>
+
                                 <div class="mb-3">
                                     <label for="CLI_EMAIL" class="form-label fw-bold">
                                         Correo electrónico <span class="text-danger" aria-hidden="true">*</span>

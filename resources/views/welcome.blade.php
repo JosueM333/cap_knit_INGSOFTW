@@ -65,6 +65,13 @@
 
                     {{-- 2. SI ES CLIENTE --}}
                     @auth('cliente')
+                        <li>
+                            <a href="{{ route('shop.pending') }}"
+                                class="text-dark text-decoration-none border-bottom border-dark border-2 pb-1">
+                                Pedidos Pendientes
+                            </a>
+                        </li>
+
                         <li class="dropdown">
                             <a href="#" class="btn btn-dark btn-sm fw-bold dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -83,6 +90,12 @@
                                         <hr class="dropdown-divider border-dark">
                                     </li>
                                 @endif
+
+                                <li>
+                                    <a href="{{ route('shop.pending') }}" class="dropdown-item fw-bold">
+                                        <i class="bi bi-clock-history me-2"></i> Pedidos Pendientes
+                                    </a>
+                                </li>
 
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">

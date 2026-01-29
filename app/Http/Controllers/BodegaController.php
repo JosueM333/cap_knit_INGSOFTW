@@ -5,9 +5,36 @@ namespace App\Http\Controllers;
 use App\Models\Bodega;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class BodegaController extends Controller
 {
+    // ... (existing methods)
+
+    public function setDefault($id)
+    {
+        try {
+            DB::connection('oracle')->beginTransaction();
+
+            // 1. Reset all to 0
+            Bodega::query()->update(['BOD_ES_DEFECTO' => 0]);
+
+            // 2. Set selected to 1
+            $bodega = Bodega::findOrFail($id);
+            $bodega->BOD_ES_DEFECTO = 1;
+            $bodega->save();
+
+            DB::connection('oracle')->commit();
+
+            return redirect()->route('bodegas.index')
+                ->with('success', "Bodega '{$bodega->BOD_NOMBRE}' marcada como por defecto.");
+
+        } catch (Exception $e) {
+            DB::connection('oracle')->rollBack();
+            return back()->with('error', 'Error al establecer bodega por defecto: ' . $e->getMessage());
+        }
+    }
     public function index(Request $request)
     {
         $criterio = $request->input('search');
@@ -35,7 +62,7 @@ class BodegaController extends Controller
             Bodega::guardarBodega($datos);
 
             return redirect()->route('bodegas.index')
-                             ->with('success', 'Bodega registrada exitosamente.');
+                ->with('success', 'Bodega registrada exitosamente.');
 
         } catch (ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
@@ -58,7 +85,7 @@ class BodegaController extends Controller
             $bodega->actualizarBodega($datos);
 
             return redirect()->route('bodegas.index')
-                             ->with('success', 'Bodega actualizada correctamente.');
+                ->with('success', 'Bodega actualizada correctamente.');
 
         } catch (ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
@@ -68,11 +95,11 @@ class BodegaController extends Controller
     public function destroy($id)
     {
         $bodega = Bodega::obtenerBodega($id);
-        
+
         // Ejecuta borrado físico
         $bodega->eliminarBodega();
 
         return redirect()->route('bodegas.index')
-                         ->with('success', 'Bodega eliminada permanentemente.');
+            ->with('success', 'Bodega eliminada permanentemente.');
     }
 }

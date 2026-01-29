@@ -33,6 +33,10 @@
                     <li><a href="{{ route('home') }}" class="text-decoration-none text-secondary fw-bold">Admin</a></li>
                     <li><a href="{{ route('shop.index') }}"
                             class="text-decoration-none text-secondary fw-bold">Tienda</a></li>
+                    @auth('cliente')
+                        <li><a href="{{ route('shop.pending') }}"
+                                class="text-decoration-none text-secondary fw-bold">Pedidos Pendientes</a></li>
+                    @endauth
                 </ul>
             </nav>
 
