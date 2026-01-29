@@ -57,66 +57,79 @@ Route::get('/shop/invoice/{id}', [HomeController::class, 'invoice'])->name('shop
 
 Route::middleware(['auth'])->group(function () {
 
-    // 1. Dashboard Principal
-    Route::get('/home', [HomeController::class, 'dashboard'])->name('home');
+    // --------------------------------------------------------
+    // GRUPO 1: ADMIN SOLAMENTE (Gestión Total)
+    // --------------------------------------------------------
+    Route::group(['middleware' => ['role:ADMIN']], function () {
+        // 1. Dashboard Principal (Aunque home es compartido, el contenido es condicional)
+        // Dejamos home accesible, pero en vista filtramos.
 
-    // 2. Recursos CRUD Básicos
-    Route::resource('clientes', ClienteController::class);
-    Route::patch('/bodegas/{bodega}/set-default', [BodegaController::class, 'setDefault'])->name('bodegas.setDefault');
-    Route::resource('bodegas', BodegaController::class);
-    Route::resource('proveedores', ProveedorController::class);
-    Route::resource('productos', ProductoController::class);
-    Route::resource('ordenes', OrdenCompraController::class);
-    // Ruta personalizada para recibir orden
-    Route::post('/ordenes/{id}/recibir', [OrdenCompraController::class, 'recibirOrden'])->name('ordenes.recibir');
+        // 2. Recursos CRUD Básicos
+        Route::resource('clientes', ClienteController::class);
+        Route::patch('/bodegas/{bodega}/set-default', [BodegaController::class, 'setDefault'])->name('bodegas.setDefault');
+        Route::resource('bodegas', BodegaController::class);
+        Route::resource('proveedores', ProveedorController::class);
+        Route::resource('productos', ProductoController::class);
+        Route::resource('ordenes', OrdenCompraController::class);
+        // Ruta personalizada para recibir orden
+        Route::post('/ordenes/{id}/recibir', [OrdenCompraController::class, 'recibirOrden'])->name('ordenes.recibir');
 
-    // 3. Gestión de Carritos (Admin)
-    Route::prefix('carritos')->group(function () {
-        Route::get('/', [CarritoController::class, 'index'])->name('carritos.index');
-        //Route::get('/consultar', [CarritoController::class, 'consultar'])->name('cansultar');
+        // 5. Reporte Kardex
+        Route::get('/kardex', [KardexController::class, 'index'])->name('kardex.index');
+    });
 
-        // Búsquedas
-        Route::post('/buscar-carrito', [CarritoController::class, 'buscarCarrito'])->name('carritos.buscar_carrito');
-        Route::post('/buscar-cliente', [CarritoController::class, 'buscarCliente'])->name('carritos.buscar_cliente');
-        // Redirección de seguridad para GET en buscar
-        Route::get('/buscar-cliente', function () {
-            return redirect()->route('carritos.index');
+    // --------------------------------------------------------
+    // GRUPO 2: ADMIN Y CAJEROS POS (Ventas)
+    // --------------------------------------------------------
+    Route::group(['middleware' => ['role:ADMIN|POS_CAJERO']], function () {
+
+        // Dashboard Común
+        Route::get('/home', [HomeController::class, 'dashboard'])->name('home');
+
+        // 3. Gestión de Carritos (Admin/POS)
+        Route::prefix('carritos')->group(function () {
+            Route::get('/', [CarritoController::class, 'index'])->name('carritos.index');
+            //Route::get('/consultar', [CarritoController::class, 'consultar'])->name('cansultar');
+
+            // Búsquedas
+            Route::post('/buscar-carrito', [CarritoController::class, 'buscarCarrito'])->name('carritos.buscar_carrito');
+            Route::post('/buscar-cliente', [CarritoController::class, 'buscarCliente'])->name('carritos.buscar_cliente');
+            // Redirección de seguridad para GET en buscar
+            Route::get('/buscar-cliente', function () {
+                return redirect()->route('carritos.index');
+            });
+
+            // Operaciones sobre carritos específicos
+            Route::get('/cliente/{id}', [CarritoController::class, 'seleccionarCliente'])->name('carritos.seleccionar_cliente');
+            Route::get('/{id}/editar', [CarritoController::class, 'editar'])->name('carritos.editar');
+            Route::patch('/detalle/{id}', [CarritoController::class, 'actualizarDetalle'])->name('carritos.actualizar_detalle');
+            Route::delete('/detalle/{id}', [CarritoController::class, 'eliminarDetalle'])->name('carritos.eliminar_detalle');
+            Route::delete('/{id}/vaciar', [CarritoController::class, 'vaciar'])->name('carritos.vaciar');
+
+            // Guardar cambios y agregar productos manuales
+            Route::post('/{id}/guardar', [CarritoController::class, 'guardar'])->name('carritos.guardar');
+            Route::post('/{id}/buscar-producto', [CarritoController::class, 'buscarProducto'])->name('carritos.buscar_producto');
+            Route::post('/{id}/agregar-producto', [CarritoController::class, 'agregarProducto'])->name('carritos.agregar_producto');
         });
 
-        // Operaciones sobre carritos específicos
-        Route::get('/cliente/{id}', [CarritoController::class, 'seleccionarCliente'])->name('carritos.seleccionar_cliente');
-        Route::get('/{id}/editar', [CarritoController::class, 'editar'])->name('carritos.editar');
-        Route::patch('/detalle/{id}', [CarritoController::class, 'actualizarDetalle'])->name('carritos.actualizar_detalle');
-        Route::delete('/detalle/{id}', [CarritoController::class, 'eliminarDetalle'])->name('carritos.eliminar_detalle');
-        Route::delete('/{id}/vaciar', [CarritoController::class, 'vaciar'])->name('carritos.vaciar');
+        // 4. Gestión de Comprobantes (Admin/POS)
+        Route::prefix('comprobantes')->group(function () {
+            // Listado y Búsqueda
+            Route::get('/', [ComprobanteController::class, 'index'])->name('comprobantes.index');
+            Route::post('/buscar', [ComprobanteController::class, 'buscar'])->name('comprobantes.buscar');
 
-        // Guardar cambios y agregar productos manuales
-        Route::post('/{id}/guardar', [CarritoController::class, 'guardar'])->name('carritos.guardar');
-        Route::post('/{id}/buscar-producto', [CarritoController::class, 'buscarProducto'])->name('carritos.buscar_producto');
-        Route::post('/{id}/agregar-producto', [CarritoController::class, 'agregarProducto'])->name('carritos.agregar_producto');
+            // Crear Factura (Emitir)
+            Route::get('/crear', [ComprobanteController::class, 'create'])->name('comprobantes.create');
+            Route::post('/', [ComprobanteController::class, 'store'])->name('comprobantes.store'); // <-- Esta usa el Modal de Crear
+
+            // Editar y Ver
+            Route::get('/{id}/editar', [ComprobanteController::class, 'edit'])->name('comprobantes.edit');
+            Route::put('/{id}', [ComprobanteController::class, 'update'])->name('comprobantes.update');
+            Route::get('/{id}', [ComprobanteController::class, 'show'])->name('comprobantes.show');
+
+            // Anular (Borrado Lógico)
+            // IMPORTANTE: Esta es la que usa el Modal de Anulación con @method('PATCH')
+            Route::patch('/{id}/anular', [ComprobanteController::class, 'anular'])->name('comprobantes.anular');
+        });
     });
-
-    // 4. Gestión de Comprobantes (Admin)
-    Route::prefix('comprobantes')->group(function () {
-        // Listado y Búsqueda
-        Route::get('/', [ComprobanteController::class, 'index'])->name('comprobantes.index');
-        Route::post('/buscar', [ComprobanteController::class, 'buscar'])->name('comprobantes.buscar');
-
-        // Crear Factura (Emitir)
-        Route::get('/crear', [ComprobanteController::class, 'create'])->name('comprobantes.create');
-        Route::post('/', [ComprobanteController::class, 'store'])->name('comprobantes.store'); // <-- Esta usa el Modal de Crear
-
-        // Editar y Ver
-        Route::get('/{id}/editar', [ComprobanteController::class, 'edit'])->name('comprobantes.edit');
-        Route::put('/{id}', [ComprobanteController::class, 'update'])->name('comprobantes.update');
-        Route::get('/{id}', [ComprobanteController::class, 'show'])->name('comprobantes.show');
-
-        // Anular (Borrado Lógico)
-        // IMPORTANTE: Esta es la que usa el Modal de Anulación con @method('PATCH')
-        Route::patch('/{id}/anular', [ComprobanteController::class, 'anular'])->name('comprobantes.anular');
-    });
-
-    // 5. Reporte Kardex
-    Route::get('/kardex', [KardexController::class, 'index'])->name('kardex.index');
-
-}); // Fin del grupo Admin
+}); // Fin del grupo Auth

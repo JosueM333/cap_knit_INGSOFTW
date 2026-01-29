@@ -20,6 +20,8 @@
         <div class="row row-cols-1 row-cols-md-2 g-4 justify-content-center" style="max-width: 900px; margin: 0 auto;">
 
             {{-- 1. CLIENTES --}}
+            {{-- 1. CLIENTES --}}
+            @role('ADMIN')
             <div class="col">
                 <a href="{{ route('clientes.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
@@ -34,8 +36,11 @@
                     </div>
                 </a>
             </div>
+            @endrole
 
             {{-- 2. PROVEEDORES --}}
+            {{-- 2. PROVEEDORES --}}
+            @role('ADMIN')
             <div class="col">
                 <a href="{{ route('proveedores.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
@@ -50,8 +55,11 @@
                     </div>
                 </a>
             </div>
+            @endrole
 
             {{-- 3. BODEGAS --}}
+            {{-- 3. BODEGAS --}}
+            @role('ADMIN')
             <div class="col">
                 <a href="{{ route('bodegas.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
@@ -66,8 +74,11 @@
                     </div>
                 </a>
             </div>
+            @endrole
 
             {{-- 4. PRODUCTOS --}}
+            {{-- 4. PRODUCTOS --}}
+            @role('ADMIN')
             <div class="col">
                 <a href="{{ route('productos.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
@@ -82,6 +93,7 @@
                     </div>
                 </a>
             </div>
+            @endrole
 
             {{-- 5. CARRITOS DE COMPRA --}}
             <div class="col">
@@ -100,8 +112,9 @@
             </div>
 
             {{-- 6. GESTIÓN DE ÓRDENES (CASO DE USO F2.2) --}}
+            {{-- 6. GESTIÓN DE ÓRDENES --}}
+            @role('ADMIN')
             <div class="col">
-                {{-- Enlace apunta a INDEX para cumplir F2.2 --}}
                 <a href="{{ route('ordenes.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
                         <div class="card-body">
@@ -115,6 +128,7 @@
                     </div>
                 </a>
             </div>
+            @endrole
             {{-- 7. GESTIÓN DE COMPROBANTES (F5.1) --}}
             <div class="col">
                 {{-- CORRECCIÓN: Ahora apunta al index (Paso 1 -> Paso 2) --}}
@@ -132,6 +146,8 @@
             </div>
 
             {{-- 8. REPORTE KARDEX --}}
+            {{-- 8. REPORTE KARDEX --}}
+            @role('ADMIN')
             <div class="col">
                 <a href="{{ route('kardex.index') }}" class="text-decoration-none text-dark">
                     <div class="card card-menu h-100 border-dark border-1 shadow-sm text-center py-5 transition-hover">
@@ -146,6 +162,7 @@
                     </div>
                 </a>
             </div>
+            @endrole
 
         </div>
     </div>
