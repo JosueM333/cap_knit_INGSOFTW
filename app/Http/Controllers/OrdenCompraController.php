@@ -148,19 +148,35 @@ class OrdenCompraController extends Controller
 
             // 2. Procesar Detalles
             foreach ($orden->detalles as $detalle) {
-                // Actualizar/Crear Stock en BodegaProducto Pivot
-                $bodega = Bodega::findOrFail($request->BOD_ID);
-                // Usamos find() para evitar ambigüedades en la consulta pivot
-                $pivot = $bodega->productos()->find($detalle->PRO_ID);
+                // Actualizar/Crear Stock en BodegaProducto con Lógica de Suma Directa
+                $bodegaId = $request->BOD_ID;
+                $productoId = $detalle->PRO_ID;
+                $cantidadEntrante = $detalle->DOR_CANTIDAD;
 
-                if ($pivot) {
-                    $nuevoStock = $pivot->pivot->BP_STOCK + $detalle->DOR_CANTIDAD;
-                    $bodega->productos()->updateExistingPivot($detalle->PRO_ID, ['BP_STOCK' => $nuevoStock]);
+                // Verificar si existe registro en la tabla pivote (BODEGA_PRODUCTO)
+                // Usamos DB facade para ser más explícitos y evitar problemas de cache de Eloquent
+                $stockActualRegistro = DB::table('BODEGA_PRODUCTO')
+                    ->where('BOD_ID', $bodegaId)
+                    ->where('PRO_ID', $productoId)
+                    ->first();
+
+                if ($stockActualRegistro) {
+                    // Si existe, SUMAMOS la cantidad entrante al stock actual
+                    $nuevoStock = $stockActualRegistro->bp_stock + $cantidadEntrante;
+
+                    DB::table('BODEGA_PRODUCTO')
+                        ->where('BOD_ID', $bodegaId)
+                        ->where('PRO_ID', $productoId)
+                        ->update(['bp_stock' => $nuevoStock, 'updated_at' => now()]);
                 } else {
-                    // Si no existe en esa bodega, lo adjuntamos con el stock inicial
-                    $bodega->productos()->attach($detalle->PRO_ID, [
-                        'BP_STOCK' => $detalle->DOR_CANTIDAD,
-                        'BP_STOCK_MIN' => 5 // Default
+                    // Si no existe, creamos el registro con la cantidad entrante
+                    DB::table('BODEGA_PRODUCTO')->insert([
+                        'BOD_ID' => $bodegaId,
+                        'PRO_ID' => $productoId,
+                        'bp_stock' => $cantidadEntrante,
+                        'bp_stock_min' => 5, // Default
+                        'created_at' => now(),
+                        'updated_at' => now()
                     ]);
                 }
 

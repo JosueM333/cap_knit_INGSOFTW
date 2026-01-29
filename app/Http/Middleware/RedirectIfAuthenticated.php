@@ -10,18 +10,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfAuthenticated
 {
-    /**
-     * Handle an incoming request.
-     */
+
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
-            
+
             // Verificamos si hay sesión activa en este guard
             if (Auth::guard($guard)->check()) {
-                
+
                 // 1. Si el que está logueado es ADMIN ('web')
                 if ($guard === 'web') {
                     // PROTECCIÓN ANTI-BUCLE: Si ya estamos en 'home', no redirigir.
