@@ -135,6 +135,21 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label for="CLI_DIRECCION" class="form-label fw-bold">
+                                        Dirección de Domicilio <span class="text-danger" aria-hidden="true">*</span>
+                                    </label>
+                                    <input type="text" id="CLI_DIRECCION" name="CLI_DIRECCION"
+                                        class="form-control @error('CLI_DIRECCION') is-invalid @enderror"
+                                        value="{{ old('CLI_DIRECCION') }}" required
+                                        placeholder="Calle Principal y Secundaria, Nro de Casa">
+                                    @error('CLI_DIRECCION')
+                                        <span class="invalid-feedback fw-bold" role="alert">
+                                            <i class="bi bi-exclamation-circle-fill"></i> {{ $message }}
+                                        </span>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="CLI_EMAIL" class="form-label fw-bold">
                                         Correo electrónico <span class="text-danger" aria-hidden="true">*</span>
                                     </label>

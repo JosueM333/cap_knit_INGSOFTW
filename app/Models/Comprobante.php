@@ -24,10 +24,7 @@ class Comprobante extends Model
         'COM_ESTADO'
     ];
 
-    /* =========================================================
-       RELACIONES
-       ========================================================= */
-
+    // Relaciones con Cliente y Carrito
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'CLI_ID', 'CLI_ID');
@@ -38,10 +35,7 @@ class Comprobante extends Model
         return $this->belongsTo(Carrito::class, 'CRD_ID', 'CRD_ID');
     }
 
-    /* =========================================================
-       LOGICA DE NEGOCIO
-       ========================================================= */
-
+    // Búsqueda por ID de comprobante o cédula del cliente
     public static function buscarPorCriterio($criterio)
     {
         return self::where('COM_ID', $criterio)

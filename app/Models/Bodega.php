@@ -19,13 +19,9 @@ class Bodega extends Model
         'BOD_NOMBRE',
         'BOD_UBICACION',
         'BOD_DESCRIPCION'
-        // ELIMINADO: BOD_ESTADO
     ];
 
-    /* =========================================================
-       MÉTODOS DE LÓGICA DE NEGOCIO
-       ========================================================= */
-
+    // Validación de datos para creación y edición
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -47,16 +43,19 @@ class Bodega extends Model
         }
     }
 
+    // Persistencia de datos en la base de datos
     public static function guardarBodega(array $datos)
     {
         return self::create($datos);
     }
 
+    // Recupera todos los registros de la tabla BODEGA
     public static function obtenerBodegas()
     {
         return self::all();
     }
 
+    // Filtrado de bodegas por nombre o ubicación
     public static function buscarBodega($criterio)
     {
         return self::where('BOD_NOMBRE', 'LIKE', "%$criterio%")
@@ -64,19 +63,21 @@ class Bodega extends Model
             ->get();
     }
 
+    // Busca una bodega específica por su ID primario
     public static function obtenerBodega($id)
     {
         return self::findOrFail($id);
     }
 
+    // Actualiza la instancia actual de la bodega
     public function actualizarBodega(array $datos)
     {
         $this->update($datos);
     }
 
+    // Elimina el registro de forma permanente
     public function eliminarBodega()
     {
-        // Borrado Físico
         $this->delete();
     }
 }

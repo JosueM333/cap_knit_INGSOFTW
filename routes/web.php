@@ -31,14 +31,26 @@ Route::get('/shop/add-to-cart/{id}', [HomeController::class, 'addToCart'])->name
 Route::patch('/shop/update-cart', [HomeController::class, 'updateCart'])->name('update.cart');
 Route::delete('/shop/remove-from-cart', [HomeController::class, 'removeCart'])->name('remove.from.cart');
 
-// Confirmar Compra (Permite clientes reales y admins probando)
-Route::post('/shop/comprar', [HomeController::class, 'comprar'])
-    ->name('shop.comprar')
+// Checkout y Pagos (Simulación)
+Route::get('/shop/checkout', [HomeController::class, 'checkout'])
+    ->name('shop.checkout')
+    ->middleware('auth:cliente,web'); // Requiere login para pagar
+
+Route::post('/shop/process-payment', [HomeController::class, 'processPayment'])
+    ->name('shop.process_payment')
     ->middleware('auth:cliente,web');
+
+// Compatibilidad (Redirección o manejo legacy si fuera necesario, pero reemplazamos shop.comprar por shop.process_payment)
+// Route::post('/shop/comprar', [HomeController::class, 'comprar'])->name('shop.comprar')->middleware('auth:cliente,web');
 
 // Ver Factura (Cliente)
 Route::get('/shop/mi-comprobante/{id}', [HomeController::class, 'invoice'])
     ->name('shop.invoice')
+    ->middleware('auth:cliente,web');
+
+// Mis Compras (Historial)
+Route::get('/shop/mis-compras', [HomeController::class, 'myPurchases'])
+    ->name('shop.purchases')
     ->middleware('auth:cliente,web');
 
 
@@ -66,7 +78,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/buscar-cliente', [CarritoController::class, 'buscarCliente'])->name('carritos.buscar_cliente');
         // Redirección de seguridad para GET en buscar
         Route::get('/buscar-cliente', function () {
-            return redirect()->route('carritos.index'); });
+            return redirect()->route('carritos.index');
+        });
 
         // Operaciones sobre carritos específicos
         Route::get('/cliente/{id}', [CarritoController::class, 'seleccionarCliente'])->name('carritos.seleccionar_cliente');

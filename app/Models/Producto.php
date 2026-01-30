@@ -25,13 +25,9 @@ class Producto extends Model
         'PRO_COLOR',
         'PRO_TALLA',
         'PRO_MARCA'
-        // ELIMINADOS: PRO_ESTADO, PRO_VISIBLE
     ];
 
-    /* =========================================================
-       RELACIONES
-       ========================================================= */
-
+    // Relación con el Proveedor y relación muchos a muchos con Bodegas
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class, 'PRV_ID', 'PRV_ID');
@@ -41,13 +37,10 @@ class Producto extends Model
     {
         return $this->belongsToMany(Bodega::class, 'BODEGA_PRODUCTO', 'PRO_ID', 'BOD_ID')
             ->withPivot('BP_STOCK', 'BP_STOCK_MIN')
-            ->withTimestamps(); // Maneja automáticamente los timestamps de la pivote
+            ->withTimestamps();
     }
 
-    /* =========================================================
-       LÓGICA DE NEGOCIO
-       ========================================================= */
-
+    // Validación de campos técnicos y comerciales
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -58,7 +51,6 @@ class Producto extends Model
             'PRO_PRECIO' => 'required|numeric|min:0.01',
             'PRO_MARCA' => 'nullable|string|max:50',
             'PRO_COLOR' => 'nullable|string|max:30',
-            // Agregado para consistencia (estaba en fillable pero no validado)
             'PRO_TALLA' => 'nullable|string|max:10',
         ];
 
@@ -75,12 +67,11 @@ class Producto extends Model
         }
     }
 
+    // Registra el producto y lo vincula a una bodega inicial mediante una transacción
     public static function guardarProducto(array $datos)
     {
         return DB::transaction(function () use ($datos) {
             $producto = self::create($datos);
-
-            // Asignar a la primera bodega por defecto con stock 0
             $bodegaDefecto = Bodega::first();
 
             if ($bodegaDefecto) {
@@ -94,6 +85,7 @@ class Producto extends Model
         });
     }
 
+    // Métodos para obtención y búsqueda de productos
     public static function obtenerProductos()
     {
         return self::with('proveedor')->get();
@@ -112,6 +104,7 @@ class Producto extends Model
         return self::findOrFail($id);
     }
 
+    // Actualización y eliminación física del registro
     public function actualizarProducto(array $datos)
     {
         $this->update($datos);
@@ -119,7 +112,6 @@ class Producto extends Model
 
     public function eliminarProducto()
     {
-        // Borrado Físico
         $this->delete();
     }
 }

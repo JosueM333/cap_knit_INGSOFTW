@@ -80,6 +80,15 @@ footer:not(.bg-white) a:hover {
     opacity: 1;
 }
 
+/* Fix visibility for Outline Light buttons on hover (e.g. Iniciar Sesión) */
+header .btn-outline-light:hover {
+    color: var(--color-primary) !important;
+    /* Dark text */
+    background-color: #ffffff !important;
+    /* White background */
+    border-color: #ffffff !important;
+}
+
 /* --- TARJETAS (BLANCAS FLOTANTES) --- */
 .card {
     background-color: #ffffff;

@@ -13,35 +13,29 @@ class Carrito extends Model
 
     protected $table = 'CARRITO';
     protected $primaryKey = 'CRD_ID';
-    public $timestamps = false; // Legacy schema does not have timestamps
+    public $timestamps = false;
 
     protected $fillable = [
         'CLI_ID',
-        // ELIMINADO: CRD_FECHA_CREACION (Se usa created_at)
         'CRD_ESTADO',
         'CRD_SUBTOTAL',
         'CRD_IMPUESTO',
         'CRD_TOTAL'
     ];
 
-    /* =========================
-       RELACIONES
-       ========================= */
-
+    // Relación: El carrito pertenece a un Cliente
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'CLI_ID', 'CLI_ID');
     }
 
+    // Relación: El carrito posee múltiples detalles de productos
     public function detalles()
     {
         return $this->hasMany(CarritoDetalle::class, 'CRD_ID', 'CRD_ID');
     }
 
-    /* =========================
-       LÓGICA DE NEGOCIO
-       ========================= */
-
+    // Valida la existencia del cliente antes de crear el carrito
     public static function validarCreacion(array $datos)
     {
         $validator = Validator::make($datos, [
@@ -53,6 +47,7 @@ class Carrito extends Model
         }
     }
 
+    // Inicializa un nuevo carrito con valores en cero y estado ACTIVO
     public static function crearCarrito(array $data)
     {
         return self::create([
@@ -64,6 +59,7 @@ class Carrito extends Model
         ]);
     }
 
+    // Obtiene carritos que no han sido procesados o finalizados
     public static function obtenerCarritosActivos()
     {
         return self::whereIn('CRD_ESTADO', ['ACTIVO', 'GUARDADO'])
@@ -72,6 +68,7 @@ class Carrito extends Model
             ->get();
     }
 
+    // Busca carritos activos filtrando por identificación del cliente
     public static function buscarPorCliente(string $criterio)
     {
         return self::whereHas('cliente', function ($q) use ($criterio) {
@@ -83,10 +80,11 @@ class Carrito extends Model
             ->get();
     }
 
+    // Suma los detalles y aplica el cálculo de impuestos (Dynamic Config)
     public function recalcularTotales()
     {
-        $subtotal = $this->detalles->sum('DCA_SUBTOTAL'); // Optimizado
-        $impuesto = $subtotal * 0.12;
+        $subtotal = $this->detalles->sum('DCA_SUBTOTAL');
+        $impuesto = $subtotal * config('shop.iva');
         $total = $subtotal + $impuesto;
 
         $this->update([
@@ -96,9 +94,9 @@ class Carrito extends Model
         ]);
     }
 
+    // Elimina los items del carrito y cambia su estado a VACIADO
     public function vaciar()
     {
-        // Borrado físico de los detalles
         $this->detalles()->delete();
 
         $this->update([
@@ -107,5 +105,74 @@ class Carrito extends Model
             'CRD_IMPUESTO' => 0,
             'CRD_TOTAL' => 0
         ]);
+    }
+
+    /**
+     * Sincroniza el carrito de la sesión con la base de datos al iniciar sesión.
+     * Fusiona cantidades si el producto ya existe.
+     */
+    public static function syncSessionToDatabase($user)
+    {
+        $sessionCart = session()->get('cart', []);
+
+        // 1. Obtener o crear carrito activo para el usuario
+        $carrito = self::firstOrCreate(
+            [
+                'CLI_ID' => $user->CLI_ID,
+                'CRD_ESTADO' => 'ACTIVO'
+            ],
+            [
+                'CRD_FECHA_CREACION' => now(),
+                'CRD_SUBTOTAL' => 0,
+                'CRD_IMPUESTO' => 0,
+                'CRD_TOTAL' => 0
+            ]
+        );
+
+        // 2. Fusionar items de sesión en la BDD
+        if (!empty($sessionCart)) {
+            foreach ($sessionCart as $proId => $details) {
+                $detalle = CarritoDetalle::where('CRD_ID', $carrito->CRD_ID)
+                    ->where('PRO_ID', $proId)
+                    ->first();
+
+                if ($detalle) {
+                    // Si ya existe, sumar cantidad (opcional, aquí reemplazamos o sumamos)
+                    // Estrategia: Sumar cantidades
+                    $newQty = $detalle->DCA_CANTIDAD + $details['quantity'];
+                    $detalle->update([
+                        'DCA_CANTIDAD' => min(10, $newQty), // Limite de 10
+                        'DCA_PRECIO_UNITARIO' => $details['price'],
+                        'DCA_SUBTOTAL' => $details['price'] * min(10, $newQty)
+                    ]);
+                } else {
+                    // Si no existe, crear
+                    CarritoDetalle::create([
+                        'CRD_ID' => $carrito->CRD_ID,
+                        'PRO_ID' => $proId,
+                        'DCA_CANTIDAD' => $details['quantity'],
+                        'DCA_PRECIO_UNITARIO' => $details['price'],
+                        'DCA_SUBTOTAL' => $details['price'] * $details['quantity']
+                    ]);
+                }
+            }
+            $carrito->recalcularTotales();
+        }
+
+        // 3. Recargar sesión desde BDD (Para traer items que estaban guardados previamente)
+        $bddItems = $carrito->detalles()->with('producto')->get();
+        $mergedCart = [];
+
+        foreach ($bddItems as $item) {
+            $mergedCart[$item->PRO_ID] = [
+                "name" => $item->producto->PRO_NOMBRE,
+                "quantity" => $item->DCA_CANTIDAD,
+                "price" => $item->producto->PRO_PRECIO,
+                "code" => $item->producto->PRO_CODIGO,
+                "image" => "img/productos/{$item->producto->PRO_CODIGO}.jpg"
+            ];
+        }
+
+        session()->put('cart', $mergedCart);
     }
 }

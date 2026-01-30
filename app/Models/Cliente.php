@@ -30,29 +30,21 @@ class Cliente extends Authenticatable
 
     protected $hidden = [
         'CLI_PASSWORD',
-        // Se eliminó remember_token
     ];
 
-    /**
-     * Laravel: devolver el valor de la contraseña
-     */
+    // Mapeo para que Laravel identifique la contraseña en el esquema personalizado
     public function getAuthPassword()
     {
         return $this->CLI_PASSWORD;
     }
 
-    /**
-     * Laravel: decirle cuál es el nombre REAL del campo password
-     */
+    // Indica a Eloquent el nombre de la columna de credenciales
     public function getAuthPasswordName()
     {
         return 'CLI_PASSWORD';
     }
 
-    /* =========================================================
-       MÉTODOS DE LÓGICA DE NEGOCIO
-       ========================================================= */
-
+    // Reglas de validación para registro y actualización de clientes
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -76,19 +68,20 @@ class Cliente extends Authenticatable
         }
     }
 
+    // Cifra la contraseña y crea el nuevo registro
     public static function guardarCliente(array $datos)
     {
         $datos['CLI_PASSWORD'] = Hash::make($datos['CLI_PASSWORD']);
-        // El estado se guardará como 'ACTIVO' por defecto desde la BDD si no se envía
         return self::create($datos);
     }
 
+    // Retorna únicamente los clientes con estado ACTIVO
     public static function obtenerClientes()
     {
-        // CORREGIDO: Filtra por el string 'ACTIVO'
         return self::where('CLI_ESTADO', 'ACTIVO')->get();
     }
 
+    // Búsqueda multicanal por cédula, correo o apellidos
     public static function buscarCliente($criterio)
     {
         return self::where('CLI_CEDULA', 'LIKE', "%$criterio%")
@@ -97,6 +90,7 @@ class Cliente extends Authenticatable
             ->get();
     }
 
+    // Actualiza datos y gestiona el re-cifrado de contraseña si fue modificada
     public function actualizarCliente(array $datos)
     {
         if (!empty($datos['CLI_PASSWORD'])) {
@@ -107,9 +101,9 @@ class Cliente extends Authenticatable
         $this->update($datos);
     }
 
+    // Realiza un borrado lógico cambiando el estado a INACTIVO
     public function desactivarCliente()
     {
-        // CORREGIDO: Actualiza a 'INACTIVO'
         $this->CLI_ESTADO = 'INACTIVO';
         $this->save();
     }

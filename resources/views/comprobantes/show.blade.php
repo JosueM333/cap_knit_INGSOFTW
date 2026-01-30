@@ -32,7 +32,8 @@
                     <h6 class="text-uppercase text-muted fw-bold mb-3 small bg-light p-2 rounded">Facturado a:</h6>
                     <div class="px-2">
                         <h4 class="fw-bold text-dark mb-1">{{ $comprobante->cliente->CLI_NOMBRES }}
-                            {{ $comprobante->cliente->CLI_APELLIDOS }}</h4>
+                            {{ $comprobante->cliente->CLI_APELLIDOS }}
+                        </h4>
                         <p class="mb-0 text-secondary">
                             <span class="fw-bold text-dark">ID:</span> {{ $comprobante->cliente->CLI_CEDULA }}<br>
                             <span class="fw-bold text-dark">Dirección:</span> {{ $comprobante->cliente->CLI_DIRECCION }}<br>
@@ -46,7 +47,8 @@
                     </h6>
                     <div class="px-2">
                         <div class="fs-4 fw-bold text-dark">FACTURA No.
-                            {{ str_pad($comprobante->COM_ID, 6, '0', STR_PAD_LEFT) }}</div>
+                            {{ str_pad($comprobante->COM_ID, 6, '0', STR_PAD_LEFT) }}
+                        </div>
                         <div class="text-muted">
                             <span class="fw-bold">Fecha de Emisión:</span>
                             {{ \Carbon\Carbon::parse($comprobante->COM_FECHA)->format('d/m/Y') }}
@@ -120,17 +122,85 @@
 
     <style>
         @media print {
-            .no-print {
+            @page {
+                size: auto;
+                margin: 5mm;
+            }
+
+            html,
+            body {
+                background-color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                width: 100%;
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Ocultar elementos de navegación/interface */
+            .no-print,
+            .d-print-none,
+            header,
+            footer,
+            .navbar,
+            .btn {
                 display: none !important;
             }
 
-            .card {
-                border: none !important;
-                shadow: none !important;
+            /* Reset de container */
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
-            body {
-                background-color: white;
+            /* Forzar layout de columnas (Facturado a / Detalles) */
+            .col-md-7 {
+                width: 58% !important;
+                float: left;
+            }
+
+            .col-md-5 {
+                width: 41% !important;
+                float: right;
+            }
+
+            /* Asegurar que el row no tenga márgenes negativos que causen scroll */
+            .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                display: flex !important;
+            }
+
+            /* Tarjeta principal limpia */
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+
+            #invoice {
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            /* Colores y fondos */
+            .bg-dark {
+                background-color: #212529 !important;
+                color: white !important;
+            }
+
+            .bg-light {
+                background-color: #f8f9fa !important;
+            }
+
+            .badge {
+                border: 1px solid #000;
+                color: black !important;
             }
         }
     </style>

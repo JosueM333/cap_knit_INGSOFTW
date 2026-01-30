@@ -22,13 +22,9 @@ class Proveedor extends Model
         'PRV_EMAIL',
         'PRV_DIRECCION',
         'PRV_PERSONA_CONTACTO'
-        // ELIMINADO: PRV_ESTADO
     ];
 
-    /* =========================================================
-       MÉTODOS DE LÓGICA DE NEGOCIO
-       ========================================================= */
-
+    // Validación de datos del proveedor (RUC exacto de 13 dígitos)
     public static function validar(array $datos, $id = null)
     {
         $reglas = [
@@ -64,6 +60,7 @@ class Proveedor extends Model
         return self::all();
     }
 
+    // Búsqueda por RUC o Nombre de proveedor
     public static function buscarProveedor($criterio)
     {
         return self::where('PRV_RUC', 'LIKE', "%$criterio%")
@@ -83,7 +80,6 @@ class Proveedor extends Model
 
     public function eliminarProveedor()
     {
-        // Lógica de Borrado Físico
         $this->delete();
     }
 }

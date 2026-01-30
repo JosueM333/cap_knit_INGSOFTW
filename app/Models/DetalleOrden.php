@@ -11,9 +11,6 @@ class DetalleOrden extends Model
 
     protected $table = 'DETALLE_ORDEN';
     protected $primaryKey = 'DOR_ID';
-
-    // Al dejar esto en true sin definir constantes, Laravel usará 'created_at' y 'updated_at'
-    // lo cual coincide perfectamente con tu migración corregida.
     public $timestamps = false;
 
     protected $fillable = [
@@ -24,16 +21,13 @@ class DetalleOrden extends Model
         'DOR_SUBTOTAL'
     ];
 
-    /* =========================================================
-       RELACIONES
-       ========================================================= */
-
+    // Relación con el Producto asociado al detalle
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'PRO_ID', 'PRO_ID');
     }
 
-    // Relación inversa (opcional pero recomendada)
+    // Relación con la Orden de Compra cabecera
     public function orden()
     {
         return $this->belongsTo(OrdenCompra::class, 'ORD_ID', 'ORD_ID');

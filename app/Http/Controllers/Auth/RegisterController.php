@@ -26,6 +26,7 @@ class RegisterController extends Controller
             'CLI_APELLIDOS' => ['required', 'string', 'max:80'],
             'CLI_CEDULA' => ['required', 'string', 'max:15', 'unique:CLIENTE'],
             'CLI_TELEFONO' => ['required', 'string', 'max:20'],
+            'CLI_DIRECCION' => ['required', 'string', 'max:150'],
             'CLI_EMAIL' => ['required', 'string', 'email', 'max:80', 'unique:CLIENTE'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
@@ -40,7 +41,7 @@ class RegisterController extends Controller
             'CLI_PASSWORD' => Hash::make($data['password']),
             'CLI_CEDULA' => $data['CLI_CEDULA'],
             'CLI_TELEFONO' => $data['CLI_TELEFONO'],
-            'CLI_DIRECCION' => 'Sin dirección', // Todavía pendiente de agregar al form si se desea
+            'CLI_DIRECCION' => $data['CLI_DIRECCION'],
             'CLI_ESTADO' => 1,
         ]);
     }
