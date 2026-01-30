@@ -18,11 +18,11 @@
         Saltar al contenido principal
     </a>
 
-    <header class="u-bg-gray border-bottom border-2 sticky-top py-3 shadow-sm" role="banner">
+    <header class="navbar-custom border-bottom border-secondary sticky-top py-3 shadow-sm" role="banner">
         <div class="container d-flex justify-content-between align-items-center">
 
             <a href="{{ route('shop.index') }}"
-                class="text-dark text-decoration-none fw-bold fs-4 d-flex align-items-center">
+                class="text-white text-decoration-none fw-bold fs-4 d-flex align-items-center">
                 <span class="logo-text">CAP & KNIT</span>
             </a>
 
@@ -30,7 +30,7 @@
                 <ul class="d-flex gap-4 list-unstyled text-uppercase small mb-0 align-items-center fw-bold">
                     <li>
                         <a href="{{ route('shop.products') }}"
-                            class="text-dark text-decoration-none border-bottom border-dark border-2 pb-1">
+                            class="text-white text-decoration-none border-bottom border-white border-2 pb-1">
                             Productos
                         </a>
                     </li>
@@ -38,8 +38,8 @@
                     {{-- 1. SI ES ADMINISTRADOR --}}
                     @auth('web')
                         <li class="dropdown">
-                            <a href="#" class="btn btn-dark btn-sm fw-bold dropdown-toggle" data-bs-toggle="dropdown"
-                                aria-expanded="false">
+                            <a href="#" class="btn btn-outline-light btn-sm fw-bold dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-badge-fill" aria-hidden="true"></i> Admin
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
@@ -67,14 +67,14 @@
                     @auth('cliente')
                         <li>
                             <a href="{{ route('shop.pending') }}"
-                                class="text-dark text-decoration-none border-bottom border-dark border-2 pb-1">
+                                class="text-white text-decoration-none border-bottom border-white border-2 pb-1">
                                 Pedidos Pendientes
                             </a>
                         </li>
 
                         <li class="dropdown">
-                            <a href="#" class="btn btn-dark btn-sm fw-bold dropdown-toggle" data-bs-toggle="dropdown"
-                                aria-expanded="false">
+                            <a href="#" class="btn btn-outline-light btn-sm fw-bold dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-fill" aria-hidden="true"></i>
                                 Hola, {{ Auth::guard('cliente')->user()->CLI_NOMBRES }}
                             </a>
@@ -112,17 +112,17 @@
                     {{-- 3. SI NO HAY NADIE CONECTADO (NI WEB NI CLIENTE) --}}
                     @if(!Auth::guard('web')->check() && !Auth::guard('cliente')->check())
                         <li>
-                            <a href="{{ route('login') }}" class="btn btn-outline-dark btn-sm fw-bold">
+                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm fw-bold">
                                 <i class="bi bi-person" aria-hidden="true"></i> Iniciar sesión
                             </a>
                         </li>
                     @endif
 
                     <li>
-                        <a href="{{ route('shop.cart') }}" class="text-dark text-decoration-none"
+                        <a href="{{ route('shop.cart') }}" class="text-white text-decoration-none"
                             aria-label="Ver carrito de compras">
                             <i class="bi bi-cart-fill fs-5" aria-hidden="true"></i>
-                            Carrito (<span id="cart-count">0</span>)
+                            Carrito (<span id="cart-count">{{ count(session('cart', [])) }}</span>)
                         </a>
                     </li>
                 </ul>
@@ -131,39 +131,125 @@
     </header>
 
     <main id="main-content" tabindex="-1">
-        <section class="min-vh-100 d-flex align-items-center justify-content-center hero-section"
-            style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset('img/background.jpg') }}') center/cover;">
+        {{-- HERO SECTION --}}
+        <section class="min-vh-100 d-flex align-items-center justify-content-center hero-section position-relative"
+            style="background: url('{{ asset('img/hero_cats.png') }}') center/cover; margin-top: -72px;">
+            <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100"></div>
 
-            <div class="visually-hidden">
-                Imagen de fondo: Persona usando gorra de lana en invierno.
-            </div>
-
-            <div class="container text-center text-white">
-                <h1 class="display-2 fw-light text-uppercase mb-4 fw-bold text-light">
-                    La calidez se encuentra con el estilo
+            <div class="container text-center text-white position-relative" style="z-index: 2;">
+                <span class="text-uppercase fw-bold text-accent letter-spacing-2 mb-3 d-block"></span>
+                <h1 class="hero-title fw-bold text-light mb-4 text-uppercase">
+                    Eleva tu Estilo
                 </h1>
-                <p class="fs-4 mb-5 text-light fw-bold">
-                    Gorras y gorros tejidos con materiales de la más alta calidad
+                <p class="fs-4 mb-5 text-light opacity-90 fw-light" style="max-width: 700px; margin: 0 auto;">
+                    Fusionamos la frescura del streetwear con la calidez del tejido artesanal. Descubre nuestra nueva
+                    colección de temporada.
                 </p>
 
-                <a href="{{ route('shop.products') }}"
-                    class="btn btn-light btn-lg px-5 text-uppercase fw-bold border-2 border-dark shadow">
-                    Ver productos
-                </a>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ route('shop.products') }}" class="btn btn-premium fs-5 px-5 py-3 border-0">
+                        Explorar Colección
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        {{-- FEATURED CATEGORIES --}}
+        <section class="py-5 bg-white">
+            <div class="container py-5">
+                <div class="text-center mb-5">
+                    <h2 class="display-5 text-uppercase mb-2">Nuestras Colecciones</h2>
+                    <p class="text-muted">Diseñado para destacar en cualquier ambiente.</p>
+                </div>
+
+                <div class="row g-4 justify-content-center">
+                    {{-- Featured Collection: Accessories (Neko Arc) --}}
+                    <div class="col-md-8">
+                        <a href="{{ route('shop.products', ['category' => 'accessories']) }}" class="text-white">
+                            <div class="category-card shadow" style="height: 1000x;">
+                                <img src="{{ asset('img/cat_accessories.png') }}" alt="Accesorios">
+                                <div class="category-overlay">
+                                    <h3 class="h3 fw-bold mb-1 text-white">Colección Exclusiva: Accesorios</h3>
+                                    <span class="text-uppercase fw-bold text-accent">Descubrir Ahora &rarr;</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- VALUE PROPOSITIONS --}}
+        <section class="py-5 u-bg-gray">
+            <div class="container py-5">
+                <div class="row text-center g-4">
+                    <div class="col-md-4">
+                        <div class="p-4">
+                            <i class="bi bi-patch-check-fill display-4 text-accent mb-3"></i>
+                            <h4 class="h5 fw-bold text-uppercase">Calidad Garantizada</h4>
+                            <p class="text-muted small">Materiales seleccionados meticulosamente para durar.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4">
+                            <i class="bi bi-truck display-4 text-accent mb-3"></i>
+                            <h4 class="h5 fw-bold text-uppercase">Envío Rápido</h4>
+                            <p class="text-muted small">Recibe tus productos en tiempo récord.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4">
+                            <i class="bi bi-shield-lock-fill display-4 text-accent mb-3"></i>
+                            <h4 class="h5 fw-bold text-uppercase">Compra Segura</h4>
+                            <p class="text-muted small">Tus datos están protegidos con la mejor tecnología.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
-    <footer class="u-bg-gray border-top border-2 py-5" role="contentinfo">
-        <div class="container text-center text-md-start">
-            <p class="mb-0 fw-bold">
-                &copy; {{ date('Y') }} Cap & Knit. Todos los derechos reservados.
-            </p>
-            <p class="small text-muted mt-2 contrast-text">
-                <a href="#main-content" class="text-dark fw-bold text-decoration-none">
-                    Volver arriba ↑
-                </a>
-            </p>
+    <footer class="bg-primary-dark text-white border-top border-secondary py-5" role="contentinfo">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">CAP & KNIT</h5>
+                    <p class="small text-secondary">
+                        Redefiniendo el estilo urbano con la tradición del tejido. Calidad, confort y diseño en cada
+                        pieza.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">Enlaces Rápidos</h5>
+                    <ul class="list-unstyled small">
+                        <li><a href="{{ route('shop.index') }}" class="text-secondary text-decoration-none">Tienda</a>
+                        </li>
+                        <li><a href="{{ route('shop.products') }}"
+                                class="text-secondary text-decoration-none">Productos</a></li>
+                        <li><a href="{{ route('login') }}" class="text-secondary text-decoration-none">Mi Cuenta</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">Contacto</h5>
+                    <p class="small text-secondary mb-1"><i class="bi bi-geo-alt me-2"></i> Calle Principal 123, Ciudad
+                    </p>
+                    <p class="small text-secondary"><i class="bi bi-envelope me-2"></i> hola@capandknit.com</p>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 fw-bold small text-secondary">
+                        &copy; {{ date('Y') }} Cap & Knit. Todos los derechos reservados.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#main-content" class="text-accent fw-bold text-decoration-none small">
+                        Volver arriba <i class="bi bi-arrow-up"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 

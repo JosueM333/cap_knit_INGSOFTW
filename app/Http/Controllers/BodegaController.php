@@ -32,7 +32,7 @@ class BodegaController extends Controller
 
         } catch (Exception $e) {
             DB::connection('oracle')->rollBack();
-            return back()->with('error', 'Error al establecer bodega por defecto: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al establecer la bodega por defecto.');
         }
     }
     public function index(Request $request)

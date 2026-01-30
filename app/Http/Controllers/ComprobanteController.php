@@ -212,8 +212,19 @@ class ComprobanteController extends Controller
 
             Log::error("Error emitiendo factura: " . $e->getMessage());
 
+            // Allow specific business logic messages to pass through
+            $msg = $e->getMessage();
+            if (
+                str_contains($msg, 'Stock insuficiente') ||
+                str_contains($msg, 'bodega predeterminada') ||
+                str_contains($msg, 'total a facturar') ||
+                str_contains($msg, 'no existe en la bodega')
+            ) {
+                return back()->with('error', $msg)->withInput();
+            }
+
             return back()
-                ->with('error', 'Error al emitir factura: ' . $e->getMessage())
+                ->with('error', 'Ocurrió un error inesperado al emitir la factura. Por favor intente nuevamente.')
                 ->withInput();
         }
     }
@@ -318,25 +329,27 @@ class ComprobanteController extends Controller
                         $cantidad = (int) $detalle->DCO_CANTIDAD; // Usamos cantidad del detalle comprobante
                         $proId = $detalle->PRO_ID;
 
-                        // Lock en BD1
-                        $bp = DB::connection('oracle')->table('BODEGA_PRODUCTO')
-                            ->selectRaw('bp_stock')
+                        // FIX: Use increment for atomic update and avoid casing issues with selectRaw
+                        $exists = DB::connection('oracle')->table('BODEGA_PRODUCTO')
                             ->where('BOD_ID', $bodegaId)
                             ->where('PRO_ID', $proId)
-                            ->lockForUpdate()
-                            ->first();
+                            ->exists();
 
-                        if ($bp) {
-                            $stockActual = (int) $bp->bp_stock;
-                            $nuevoStock = $stockActual + $cantidad;
-
+                        if ($exists) {
                             DB::connection('oracle')->table('BODEGA_PRODUCTO')
                                 ->where('BOD_ID', $bodegaId)
                                 ->where('PRO_ID', $proId)
-                                ->update([
-                                    'bp_stock' => $nuevoStock,
-                                    'updated_at' => now(),
-                                ]);
+                                ->increment('bp_stock', $cantidad, ['updated_at' => now()]);
+                        } else {
+                            // Si no existe (raro en anulación, pero posible por consistencia), lo creamos
+                            DB::connection('oracle')->table('BODEGA_PRODUCTO')->insert([
+                                'BOD_ID' => $bodegaId,
+                                'PRO_ID' => $proId,
+                                'bp_stock' => $cantidad,
+                                'bp_stock_min' => 5,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
                         }
 
                         // Kardex en BD1
@@ -367,7 +380,7 @@ class ComprobanteController extends Controller
 
         } catch (Exception $e) {
             Log::error("Error anulando comprobante ($id): " . $e->getMessage());
-            return back()->with('error', 'Error inesperado al anular el comprobante: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado al anular el comprobante. Por favor intente nuevamente.');
         }
     }
 }

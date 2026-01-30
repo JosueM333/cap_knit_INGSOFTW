@@ -65,7 +65,7 @@ class OrdenCompraController extends Controller
         } catch (QueryException $e) {
             return back()->with('error', 'E1/E3: Error de base de datos.')->withInput();
         } catch (\Exception $e) {
-            return back()->with('error', 'Error inesperado: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Ocurrió un error inesperado al generar la orden via web.')->withInput();
         }
     }
 
@@ -206,7 +206,7 @@ class OrdenCompraController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al recibir: ' . $e->getMessage());
+            return back()->with('error', 'No se pudo procesar la recepción de la orden. Verifique el stock e intente nuevamente.');
         }
     }
 }

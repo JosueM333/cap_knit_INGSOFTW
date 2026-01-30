@@ -50,6 +50,7 @@ Route::delete('/shop/remove-from-cart', [HomeController::class, 'removeCart'])->
 Route::post('/shop/save-order', [HomeController::class, 'saveOrder'])->name('shop.saveOrder')->middleware('auth:cliente');
 Route::get('/shop/pending', [HomeController::class, 'pendingOrders'])->name('shop.pending')->middleware('auth:cliente');
 Route::post('/shop/process-order/{id}', [HomeController::class, 'processOrder'])->name('shop.processOrder')->middleware('auth:cliente');
+Route::post('/shop/cancel-order/{id}', [HomeController::class, 'cancelOrder'])->name('shop.cancelOrder')->middleware('auth:cliente');
 Route::get('/shop/invoice/{id}', [HomeController::class, 'invoice'])->name('shop.invoice')->middleware('auth:cliente');
 
 

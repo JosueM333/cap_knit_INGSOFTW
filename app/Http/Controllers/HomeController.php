@@ -123,7 +123,8 @@ class HomeController extends Controller
 
         } catch (Exception $e) {
             DB::connection('oracle_guayaquil')->rollBack();
-            return redirect()->route('shop.cart')->with('error', 'Error al guardar el pedido: ' . $e->getMessage());
+            // Generic error message for saveOrder
+            return redirect()->route('shop.cart')->with('error', 'Lo sentimos, no pudimos procesar su pedido en este momento. Por favor intente nuevamente.');
         }
     }
 
@@ -252,7 +253,41 @@ class HomeController extends Controller
         } catch (Exception $e) {
             DB::connection('oracle')->rollBack();
             DB::connection('oracle_guayaquil')->rollBack();
-            return redirect()->back()->with('error', 'Error al procesar: ' . $e->getMessage());
+
+            // Allow "Stock insuficiente" message to pass through as it is user-friendly/logic relevant
+            if (str_contains($e->getMessage(), 'Stock insuficiente')) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+
+            return redirect()->back()->with('error', 'Ocurrió un error inesperado al procesar la compra. Intente nuevamente.');
+        }
+    }
+
+    /**
+     * Cancelar Compra Pendiente
+     * Elimina el carrito y sus detalles.
+     */
+    public function cancelOrder($id)
+    {
+        $user = Auth::guard('cliente')->user();
+
+        try {
+            // Buscar el carrito especifico
+            $carrito = Carrito::where('CLI_ID', $user->CLI_ID)
+                ->where('CRD_ID', $id)
+                ->where('CRD_ESTADO', 'GUARDADO')
+                ->firstOrFail();
+
+            // Eliminar detalles primero (aunque cascade podría encargarse, lo hacemos explícito como pidió el usuario)
+            $carrito->detalles()->delete();
+
+            // Eliminar carrito (para que desaparezca de la lista)
+            $carrito->delete();
+
+            return redirect()->route('shop.pending')->with('success', 'Compra cancelada correctamente.');
+
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'No se pudo cancelar el pedido. Por favor contacte a soporte si el problema persiste.');
         }
     }
 

@@ -61,7 +61,16 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="card-footer bg-white text-end py-3">
+                        <div class="card-footer bg-white py-3 d-flex justify-content-end gap-2">
+                            {{-- Botón Cancelar --}}
+                            <form action="{{ route('shop.cancelOrder', $pedido->CRD_ID) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta compra?');">
+                                @csrf
+                                <button type="submit" class="btn btn-danger fw-bold px-4">
+                                    <i class="bi bi-x-circle me-2"></i> CANCELAR COMPRA
+                                </button>
+                            </form>
+
+                            {{-- Botón Facturar --}}
                             <form action="{{ route('shop.processOrder', $pedido->CRD_ID) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-success fw-bold px-4">

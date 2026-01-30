@@ -142,6 +142,7 @@
                             <p class="text-muted small">Emitir facturas de ventas pendientes.</p>
                             <span class="btn btn-dark mt-2 fw-bold">Ingresar</span>
                         </div>
+                    </div>
                 </a>
             </div>
 

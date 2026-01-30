@@ -1,249 +1,218 @@
-/* =====================================================
-   styles.css — DISEÑO "WINTER BLUE" + ACCESIBILIDAD AA
-   ===================================================== */
+/* 
+   CAP & KNIT - PREMIUM DESIGN SYSTEM 
+   Theme: Urban meets Knit
+*/
 
 :root {
-    /* Paleta de Colores (Tema Azul/Invierno) */
-    --color-primary: #0f172a;       /* Azul Marino Oscuro (Header/Footer) */
-    --color-accent: #2563eb;        /* Azul Vibrante (Botones/Enlaces) */
-    --color-accent-hover: #1e40af;  /* Azul Oscuro (Hover) */
-    --color-bg: #f8fafc;            /* Gris Hielo (Fondo) */
-    --color-text: #334155;          /* Gris Pizarra (Texto) */
-    --color-heading: #0f172a;       /* Negro Azulado (Títulos) */
-    
-    /* Variables de Estilo */
-    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    --radius: 0.75rem;
+    /* Color Palette */
+    --ck-primary-dark: #0f172a;
+    /* Deep Navy */
+    --ck-primary-light: #1e293b;
+    /* Lighter Navy */
+    --ck-accent: #ea580c;
+    /* Burnt Orange (Warmth) */
+    --ck-accent-hover: #c2410c;
+    --ck-gold: #f59e0b;
+    /* Premium hints */
+    --ck-bg-light: #f8fafc;
+    --ck-text-main: #334155;
+    --ck-text-muted: #64748b;
+
+    /* Typography */
+    --font-heading: 'Helvetica Neue', 'Arial', sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Effects */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --- BASE --- */
 body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body);
+    background-color: var(--ck-bg-light);
+    color: var(--ck-text-main);
+    line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, .logo-text, .fw-bold {
-    color: var(--color-heading);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    color: var(--ck-primary-dark);
+    font-weight: 700;
 }
 
-/* --- FOCUS VISIBLE (ACCESIBILIDAD) --- */
-*:focus {
-    outline: 3px solid var(--color-accent) !important;
-    outline-offset: 2px !important;
+/* --- UTILITIES --- */
+.text-accent {
+    color: var(--ck-accent) !important;
 }
 
-/* --- HEADER & FOOTER (AZUL MARINO) --- */
-header, footer {
-    background-color: var(--color-primary) !important; /* Forzamos azul */
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+.bg-primary-dark {
+    background-color: var(--ck-primary-dark) !important;
 }
 
-/* Enlaces del header */
-header a, footer a, header i, footer i, header span {
-    color: #e2e8f0 !important; /* Blanco hueso */
+/* --- BUTTONS --- */
+.btn-premium {
+    background-color: var(--ck-primary-dark);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    transition: var(--transition);
+    border: 2px solid var(--ck-primary-dark);
+}
+
+.btn-premium:hover {
+    background-color: transparent;
+    color: var(--ck-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-accent {
+    background-color: var(--ck-accent);
+    color: white;
+    border: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-accent:hover {
+    background-color: var(--ck-accent-hover);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* --- CARDS & GLASSMORPHISM --- */
+.card-premium {
+    background: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-lg);
+}
+
+/* --- NAVIGATION --- */
+.navbar-custom {
+    background-color: var(--ck-primary-dark);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-link-custom {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    position: relative;
     transition: color 0.2s;
 }
 
-header a:hover, footer a:hover {
-    color: #ffffff !important;
-    opacity: 1;
+.nav-link-custom:hover {
+    color: #ffffff;
 }
 
-/* --- TARJETAS (BLANCAS FLOTANTES) --- */
-.card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: var(--radius);
-    box-shadow: var(--card-shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.nav-link-custom::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: var(--ck-accent);
+    transition: width 0.3s;
+}
+
+.nav-link-custom:hover::after {
+    width: 100%;
+}
+
+/* --- HERO SECTION --- */
+.hero-overlay {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* --- PRODUCT GRID --- */
+.product-img-wrapper {
+    position: relative;
     overflow: hidden;
+    padding-top: 100%;
+    /* 1:1 Aspect Ratio */
 }
 
-/* Efecto Hover (Animación) */
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--card-shadow-hover);
-    border-color: var(--color-accent);
-}
-
-.card img {
+.product-img-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     transition: transform 0.5s ease;
 }
 
-.card:hover img {
-    transform: scale(1.05); /* Zoom suave a la imagen */
+.card-premium:hover .product-img-wrapper img {
+    transform: scale(1.05);
 }
 
-/* --- BOTONES PERSONALIZADOS --- */
-.btn-dark {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-}
-.btn-dark:hover {
-    background-color: #1e293b;
+.category-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 300px;
 }
 
-.btn-outline-dark {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-}
-.btn-outline-dark:hover {
-    background-color: var(--color-primary);
-    color: #ffffff;
-}
-
-/* Botones de acción principal (Añadir carrito) */
-.btn-success, .btn-accent {
-    background-color: var(--color-accent) !important;
-    border-color: var(--color-accent) !important;
-    color: #ffffff;
-}
-.btn-success:hover {
-    background-color: var(--color-accent-hover) !important;
+.category-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    /* Ensure images are centered */
+    transition: transform 0.6s ease;
 }
 
-/* --- ANIMACIÓN DE ENTRADA (FADE IN) --- */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.category-card:hover img {
+    transform: scale(1.1);
 }
 
-/* Clase para aplicar a las columnas de productos */
-.animate-entry {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0; /* Invisible al inicio */
+.category-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 2rem 1.5rem;
+    color: white;
 }
 
-/* Respetar preferencia de usuario de no movimiento */
-@media (prefers-reduced-motion: reduce) {
-    .card, .card img, .animate-entry {
-        transition: none !important;
-        animation: none !important;
-        transform: none !important;
-        opacity: 1 !important;
-    }
-}
-
-/* --- UTILIDADES ACCESIBILIDAD --- */
-.sr-only, .visually-hidden {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-}
-
-.skip-link {
-    position: absolute; top: -50px; left: 10px;
-    background: var(--color-primary); color: #ffffff;
-    padding: 10px 15px; text-decoration: none; z-index: 9999;
-    border: 2px solid var(--color-accent); font-weight: bold;
-    transition: top 0.2s; border-radius: 0 0 5px 5px;
-}
-
-.skip-link:focus { top: 0; outline: none; }
-
-/* Subrayar Enlaces (Toggle) */
-body.show-underlines a {
-    text-decoration: underline !important;
-    text-decoration-thickness: 2px !important;
-    text-underline-offset: 2px !important;
-}
-
-/* Tamaño de fuente (Toggle) */
-html.font-sm { font-size: 85%; }
-html.font-lg { font-size: 115%; }
-html.font-xl { font-size: 130%; }
-
-/* Widget de accesibilidad */
-.accessibility-widget {
-    position: fixed; bottom: 20px; right: 20px; z-index: 1050;
-    display: flex; flex-direction: column; align-items: end;
-}
-
-.access-menu {
-    margin-bottom: 10px; width: 280px; display: none;
-    background-color: #ffffff; border: 1px solid #dee2e6;
-    border-radius: 0.5rem; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.access-menu.show { display: block; animation: fadeInUp 0.2s ease-out; }
-
-
-/* =====================================================
-   ALTO CONTRASTE (PRIORIDAD FINAL - SOBREESCRIBE TODO)
-===================================================== */
-body.high-contrast {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-}
-
-/* Reset visual masivo para eliminar azul/gris */
-body.high-contrast header,
-body.high-contrast footer,
-body.high-contrast section,
-body.high-contrast .card,
-body.high-contrast .dropdown-menu,
-body.high-contrast .list-group-item,
-body.high-contrast .bg-light,
-body.high-contrast .access-menu {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    border-color: #ffffff !important;
-    background-image: none !important;
-    box-shadow: none !important;
-}
-
-/* Bordes obligatorios */
-body.high-contrast .card,
-body.high-contrast .btn,
-body.high-contrast .form-control,
-body.high-contrast .dropdown-menu {
-    border: 2px solid #ffffff !important;
-}
-
-/* Textos clave en Amarillo */
-body.high-contrast h1, body.high-contrast h2, body.high-contrast h3,
-body.high-contrast h4, body.high-contrast h5, body.high-contrast strong,
-body.high-contrast .fw-bold, body.high-contrast .navbar-brand {
-    color: #ffff00 !important;
-}
-
-/* Enlaces en Cian y Subrayados */
-body.high-contrast a:not(.btn) {
-    color: #00ffff !important;
-    text-decoration: underline !important;
-}
-
-/* Botones en Alto Contraste */
-body.high-contrast .btn {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    font-weight: bold !important;
-    border: 2px solid #ffffff !important;
-}
-body.high-contrast .btn:hover {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-}
-
-/* Inputs */
-body.high-contrast input, body.high-contrast select, body.high-contrast textarea {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    border: 2px solid #ffffff !important;
-}
-
-/* Desactivar animaciones decorativas en alto contraste */
-body.high-contrast .card:hover, 
-body.high-contrast .animate-entry {
-    transform: none !important;
-    animation: none !important;
-}
-
-/* Focus Extremo */
-body.high-contrast *:focus {
-    outline: 4px solid #ffff00 !important;
-    outline-offset: 3px !important;
-    box-shadow: 0 0 0 6px #000000 !important;
+/* Accessibility */
+.skip-link:focus {
+    top: 20px;
+    background: var(--ck-primary-dark);
+    color: white;
+    z-index: 9999;
 }

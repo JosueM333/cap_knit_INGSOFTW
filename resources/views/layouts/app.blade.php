@@ -8,6 +8,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('styles.css') }}">
 
     <style>
         body {
@@ -21,22 +22,29 @@
 
 <body class="bg-light">
 
-    <header class="bg-white border-bottom sticky-top py-3 shadow-sm mb-4">
+    <header class="navbar-custom sticky-top py-3 shadow-sm mb-4">
         <div class="container d-flex justify-content-between align-items-center">
 
-            <a href="{{ url('/') }}" class="text-dark text-decoration-none fw-bold fs-4">
-                CAP & KNIT
+            <a href="{{ url('/') }}"
+                class="text-white text-decoration-none fw-bold fs-4 d-flex align-items-center gap-2">
+                <span style="font-family: var(--font-heading); letter-spacing: 1px;">CAP & KNIT</span>
             </a>
 
             <nav class="d-none d-lg-block">
                 <ul class="d-flex gap-4 list-unstyled text-uppercase small mb-0 align-items-center">
-                    <li><a href="{{ route('home') }}" class="text-decoration-none text-secondary fw-bold">Admin</a></li>
-                    <li><a href="{{ route('shop.index') }}"
-                            class="text-decoration-none text-secondary fw-bold">Tienda</a></li>
+                    <li><a href="{{ route('home') }}" class="text-decoration-none nav-link-custom">Admin</a></li>
+                    <li><a href="{{ route('shop.index') }}" class="text-decoration-none nav-link-custom">Tienda</a></li>
                     @auth('cliente')
-                        <li><a href="{{ route('shop.pending') }}"
-                                class="text-decoration-none text-secondary fw-bold">Pedidos Pendientes</a></li>
+                        <li><a href="{{ route('shop.pending') }}" class="text-decoration-none nav-link-custom">Pedidos
+                                Pendientes</a></li>
                     @endauth
+                    <li>
+                        <a href="{{ route('shop.cart') }}" class="text-decoration-none nav-link-custom"
+                            aria-label="Ver carrito de compras">
+                            <i class="bi bi-cart-fill fs-5 me-1"></i> Carrito (<span
+                                id="cart-count">{{ count(session('cart', [])) }}</span>)
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -141,9 +149,47 @@
         </div>
     </div>
 
-    <footer class="bg-white border-top py-3 mt-auto text-center text-muted small">
+    <footer class="bg-primary-dark text-white border-top border-secondary py-5 mt-auto">
         <div class="container">
-            &copy; {{ date('Y') }} Cap & Knit - Panel de Gestión
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">CAP & KNIT</h5>
+                    <p class="small text-secondary">
+                        Redefiniendo el estilo urbano con la tradición del tejido. Calidad, confort y diseño en cada
+                        pieza.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">Enlaces Rápidos</h5>
+                    <ul class="list-unstyled small">
+                        <li><a href="{{ route('shop.index') }}" class="text-secondary text-decoration-none">Tienda</a>
+                        </li>
+                        <li><a href="{{ route('shop.products') }}"
+                                class="text-secondary text-decoration-none">Productos</a></li>
+                        <li><a href="{{ route('login') }}" class="text-secondary text-decoration-none">Mi Cuenta</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-uppercase mb-3">Contacto</h5>
+                    <p class="small text-secondary mb-1"><i class="bi bi-geo-alt me-2"></i> Calle Principal 123, Ciudad
+                    </p>
+                    <p class="small text-secondary"><i class="bi bi-envelope me-2"></i> hola@capandknit.com</p>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 fw-bold small text-secondary">
+                        &copy; {{ date('Y') }} Cap & Knit. Todos los derechos reservados.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-accent fw-bold text-decoration-none small">
+                        Volver arriba <i class="bi bi-arrow-up"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 
