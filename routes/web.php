@@ -121,7 +121,9 @@ Route::prefix('api/auth')->group(function () {
     Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
     Route::post('refresh', [\App\Http\Controllers\Api\AuthController::class, 'refresh']);
     
-    // Las rutas de me y logout requieren incluir el token Bearer en el Header (Autorization)
-    Route::post('logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
-    Route::post('me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+    // Usamos el middleware para evitar 2 dispositivos logueados simultáneamente (Riesgo 8)
+    Route::middleware([\App\Http\Middleware\ConcurrentSessionMiddleware::class])->group(function () {
+        Route::post('logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+        Route::post('me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+    });
 });
