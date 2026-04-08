@@ -8,8 +8,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class Cliente extends Authenticatable
+class Cliente extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
@@ -106,5 +107,22 @@ class Cliente extends Authenticatable
     {
         $this->CLI_ESTADO = 'INACTIVO';
         $this->save();
+    }
+
+    // ==========================================
+    // METODOS REQUERIDOS POR JWTSubject (TEMA 3)
+    // ==========================================
+    
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [
+            'email' => $this->CLI_EMAIL,
+            'role' => 'cliente' // Riesgo 2: fijamos el rol para evitar que modifiquen el payload y escalen a admin
+        ];
     }
 }

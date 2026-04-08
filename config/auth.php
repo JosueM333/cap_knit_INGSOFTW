@@ -37,6 +37,11 @@ return [
             'driver' => 'session',
             'provider' => 'clientes', // Apunta al provider 'clientes' de abajo
         ],
+
+        'api_cliente' => [
+            'driver' => 'jwt',
+            'provider' => 'clientes',
+        ],
     ],
 
     /*

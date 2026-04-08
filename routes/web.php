@@ -115,3 +115,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
 }); // Fin del grupo Admin
+
+// ZONA DE API JWT - TEMA 3
+Route::prefix('api/auth')->group(function () {
+    Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+    Route::post('refresh', [\App\Http\Controllers\Api\AuthController::class, 'refresh']);
+    
+    // Las rutas de me y logout requieren incluir el token Bearer en el Header (Autorization)
+    Route::post('logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+    Route::post('me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+});
